@@ -1,0 +1,9 @@
+# Docker volumes and data
+volumes/
+data/
+
+# Docker environment
+.env
+
+# Logs
+*.log

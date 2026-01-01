@@ -51,6 +51,13 @@
             <version>2.17.0</version>
         </dependency>
 
+        <!-- MongoDB Driver -->
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver-sync</artifactId>
+            <version>4.11.1</version>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -70,11 +77,27 @@
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>com.coinbase.flink.CoinbaseFlinkJob</mainClass>
+                                    <manifestEntries>
+                                        <Add-Opens>java.base/java.util java.base/java.lang java.base/java.lang.invoke java.base/java.lang.reflect java.base/java.io java.base/java.net java.base/java.nio java.base/java.util.concurrent java.base/java.util.concurrent.atomic java.base/sun.nio.ch java.base/sun.nio.cs java.base/sun.security.action java.base/sun.util.calendar java.base/java.time</Add-Opens>
+                                    </manifestEntries>
                                 </transformer>
                             </transformers>
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>com.coinbase.flink.CoinbaseFlinkJob</mainClass>
+                    <arguments>
+                        <argument>--add-opens=java.base/java.util=ALL-UNNAMED</argument>
+                        <argument>--add-opens=java.base/java.lang=ALL-UNNAMED</argument>
+                    </arguments>
+                </configuration>
             </plugin>
 
         </plugins>
