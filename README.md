@@ -165,7 +165,7 @@ Dashboard: **http://localhost:5173**
 ## 📸 Screenshots
 
 ### Main Dashboard
-![Dashboard Overview](images/dashboard.png)
+![Dashboard Overview](images/dashboard1.png)
 
 **Displays:**
 - Average BTC-USD price
@@ -394,6 +394,24 @@ docker-compose -f docker-compose.prod.yml build
 
 # Start services
 docker-compose -f docker-compose.prod.yml up -d
+```
+
+## 🛑 Stopping Services
+
+```bash
+# Stop frontend
+Ctrl + C
+
+# Stop backend
+Ctrl + C
+
+# Stop Flink
+Ctrl + C
+
+# Stop Docker services
+cd coinbase-docker
+docker-compose down
+```
 
 ## 📝 License
 
@@ -401,7 +419,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👤 Author
 
-**Rohana**
+**Rohan**
 
 Built with ❤️ using Spring Boot, Apache Flink, React, and Kafka.
 
