@@ -1,169 +1,419 @@
-# Coinbase Real-Time Market Data Analytics
+# 🪙 Coinbase Real-Time Analytics Dashboard
 
-A distributed real-time data streaming and analytics platform for Coinbase market data using Spring Boot, Apache Kafka, Apache Flink, and MongoDB.
+A distributed real-time cryptocurrency market analytics platform that streams, processes, and visualizes Bitcoin price data using modern microservices architecture.
+
+![Dashboard Preview](images/dashboard.png)
+
+## ✨ Features
+
+- 📊 **Real-Time Analytics** - Live BTC-USD price tracking with 10-second aggregation windows
+- 🔄 **Stream Processing** - Apache Flink for continuous data processing
+- 📈 **Interactive Charts** - Visual representation of price trends and update frequency
+- ⚡ **Live Updates** - Auto-refreshing dashboard every 5 seconds
+- 🎨 **Modern UI** - Responsive design with dark theme using Tailwind CSS
+- 🏗️ **Scalable Architecture** - Microservices-based distributed system
 
 ## 🏗️ Architecture
 
 ```
-Coinbase WebSocket → Spring Boot → Kafka → Flink → MongoDB
-                                         ↓
-                                    Analytics & Processing
+Coinbase WebSocket → Spring Boot → Kafka → Apache Flink → MongoDB → REST API → React Dashboard
 ```
+
+### System Flow
+1. **WebSocket Client** connects to Coinbase Pro and subscribes to BTC-USD ticker
+2. **Kafka Producer** publishes real-time price updates to message queue
+3. **Flink Job** processes stream data using 10-second tumbling windows
+4. **MongoDB** stores aggregated analytics (avg price, count, timestamp)
+5. **Spring Boot API** exposes RESTful endpoints for data retrieval
+6. **React Dashboard** displays live analytics with charts and tables
+
+## 🛠️ Tech Stack
+
+### Backend
+- **Java 17** - Programming language
+- **Spring Boot 3.2.0** - REST API framework with WebSocket support
+- **Apache Kafka** - Distributed message streaming platform
+- **Apache Flink 1.18** - Stream processing engine
+- **MongoDB** - NoSQL database for analytics storage
+
+### Frontend
+- **React 19** - UI library with hooks
+- **Vite** - Fast build tool and dev server
+- **Tailwind CSS** - Utility-first CSS framework
+- **Recharts** - Composable charting library
+- **Axios** - HTTP client for API calls
+- **Lucide React** - Beautiful icon set
+
+### Infrastructure
+- **Docker Compose** - Container orchestration
+- **Maven** - Build automation and dependency management
 
 ## 📦 Project Structure
 
 ```
 Coinbase/
-├── coinbase-backend/      # Spring Boot application (WebSocket → Kafka)
-├── coinbase-flink/        # Apache Flink stream processing
-├── coinbase-docker/       # Docker Compose infrastructure
-└── coinbase-frontend/     # Frontend application (optional)
+├── coinbase-backend/              # Spring Boot REST API
+│   ├── src/main/java/com/coinbase/
+│   │   ├── model/                 # PriceAnalytics entity
+│   │   ├── repository/            # MongoDB repository
+│   │   ├── controller/            # AnalyticsController (REST)
+│   │   ├── config/                # WebConfig (CORS)
+│   │   └── streaming/
+│   │       ├── kafka/             # Kafka producer
+│   │       └── websocket/         # Coinbase WebSocket client
+│   └── src/main/resources/
+│       └── application.yml        # Configuration
+│
+├── coinbase-flink/                # Apache Flink stream processor
+│   ├── src/main/java/com/coinbase/flink/
+│   │   ├── model/                 # Data models
+│   │   ├── sink/                  # MongoDBSink
+│   │   └── CoinbaseFlinkJob.java # Main processing job
+│   └── run-flink.bat              # Windows startup script
+│
+├── coinbase-frontend/             # React dashboard
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── StatCard.jsx       # Metric display cards
+│   │   │   ├── PriceChart.jsx     # Line chart component
+│   │   │   ├── CountChart.jsx     # Bar chart component
+│   │   │   └── UpdatesTable.jsx   # Recent updates table
+│   │   ├── pages/
+│   │   │   └── Dashboard.jsx      # Main dashboard page
+│   │   └── services/
+│   │       └── api.js             # API service layer
+│   └── package.json
+│
+├── coinbase-docker/               # Infrastructure
+│   └── docker-compose.yml         # Kafka, Zookeeper, MongoDB
+│
+└── images/                        # Screenshots
 ```
 
-## 🚀 Technologies
+## 🚀 Quick Start
 
-- **Java 17**
-- **Spring Boot 3.2.0** - Backend framework
-- **Apache Kafka** - Message streaming
-- **Apache Flink 1.18** - Stream processing
-- **MongoDB** - Data persistence
-- **Docker** - Containerization
+### Prerequisites
 
-## 🔧 Prerequisites
+- **Java 17+** ([Download](https://www.oracle.com/java/technologies/downloads/))
+- **Node.js 18+** ([Download](https://nodejs.org/))
+- **Maven 3.6+** ([Download](https://maven.apache.org/download.cgi))
+- **Docker Desktop** ([Download](https://www.docker.com/products/docker-desktop))
 
-- Java 17+
-- Maven 3.9+
-- Docker & Docker Compose
-- Git
+### 1️⃣ Start Infrastructure
 
-## 📋 Setup & Installation
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/YOUR_USERNAME/coinbase-analytics.git
-cd coinbase-analytics
-```
-
-### 2. Start Infrastructure (Kafka, MongoDB, Flink)
+Start Kafka, Zookeeper, and MongoDB using Docker:
 
 ```bash
 cd coinbase-docker
 docker-compose up -d
 ```
 
-This starts:
-- Zookeeper (port 2181)
-- Kafka (port 9092)
-- MongoDB (port 27017)
-- Flink JobManager (port 8081)
-- Flink TaskManager
+**Services Started:**
+- 🐘 Zookeeper → `localhost:2181`
+- 📮 Kafka → `localhost:9092`
+- 🍃 MongoDB → `localhost:27017`
 
-### 3. Run Spring Boot Backend
+Verify containers are running:
+```bash
+docker ps
+```
+
+### 2️⃣ Start Spring Boot Backend
 
 ```bash
 cd coinbase-backend
-mvn clean install
-mvn spring-boot:run
+mvnw clean install
+mvnw spring-boot:run
 ```
 
-The backend will:
+Backend API: **http://localhost:8080**
+
+The backend will automatically:
 - Connect to Coinbase WebSocket
-- Subscribe to BTC-USD market data
+- Subscribe to BTC-USD ticker
 - Stream data to Kafka topic: `coinbase-market-data`
 
-### 4. Run Flink Processing Job
+### 3️⃣ Start Flink Processing Job
 
 ```bash
 cd coinbase-flink
-mvn clean package
+mvnw clean package
+run-flink.bat
+```
+
+Or use Maven:
+```bash
 mvn exec:java -Dexec.mainClass="com.coinbase.flink.CoinbaseFlinkJob"
 ```
 
-Or run directly from IDE:
-- Open `CoinbaseFlinkJob.java`
-- Right-click → Run As → Java Application
+Flink will:
+- Consume messages from Kafka
+- Apply 10-second tumbling windows
+- Calculate average price and count
+- Store results in MongoDB
 
-## 🎯 Features
-
-- ✅ Real-time WebSocket connection to Coinbase
-- ✅ BTC-USD market data streaming
-- ✅ Kafka message broker integration
-- ✅ Apache Flink stream processing
-- ✅ MongoDB data persistence (configured)
-- 🔄 Scalable microservices architecture
-
-## 📊 Monitoring
-
-- **Flink Dashboard**: http://localhost:8081
-- **Spring Boot**: http://localhost:8080
-- **MongoDB**: mongodb://localhost:27017/coinbase_analytics
-
-## 🐳 Docker Services
-
-| Service | Port | Description |
-|---------|------|-------------|
-| Zookeeper | 2181 | Kafka coordination |
-| Kafka | 9092 | Message streaming |
-| MongoDB | 27017 | Database |
-| Flink JobManager | 8081 | Stream processing UI |
-
-## 🛠️ Development
-
-### Build All Projects
+### 4️⃣ Start React Frontend
 
 ```bash
-# Backend
-cd coinbase-backend
-mvn clean install
-
-# Flink
-cd coinbase-flink
-mvn clean package
+cd coinbase-frontend
+npm install
+npm run dev
 ```
 
-### Stop Infrastructure
+Dashboard: **http://localhost:5173**
 
-```bash
-cd coinbase-docker
-docker-compose down
+## 📸 Screenshots
+
+### Main Dashboard
+![Dashboard Overview](images/dashboard.png)
+
+**Displays:**
+- Average BTC-USD price
+- Total updates in 10-second window
+- Last update timestamp
+- Price trend chart
+- Update frequency chart
+- Recent updates table
+
+### Live Analytics
+![Live Updates](images/dashboard-table.png)
+
+**Shows:**
+- Real-time price updates
+- Update count per window
+- Trend indicators (↗️ up / ↘️ down)
+- Auto-refresh every 5 seconds
+
+## 🌐 API Endpoints
+
+### Analytics Controller
+
+| Endpoint | Method | Description | Example |
+|----------|--------|-------------|---------|
+| `/api/analytics/summary` | GET | Latest aggregated stats | Current avg price, count, timestamp |
+| `/api/analytics/recent` | GET | Recent records | `?symbol=BTC-USD&limit=30` |
+| `/api/analytics/latest` | GET | Most recent analytics | Latest window data |
+| `/api/analytics/health` | GET | Health check | Service status |
+
+### Example API Response
+
+```json
+{
+  "symbol": "BTC-USD",
+  "avgPrice": 90046.15,
+  "count": 13978,
+  "timestamp": 1735902900000,
+  "formattedTime": "2026-01-03T10:15:00Z"
+}
 ```
 
-## 📝 Configuration
+## 🎨 UI Components
 
-### Backend (application.yml)
+### StatCard
+Displays key metrics in card format with title, value, and subtitle.
+
+### PriceChart (Line Chart)
+Visualizes BTC-USD average price over time using Recharts LineChart.
+
+### CountChart (Bar Chart)
+Shows price update frequency/volume using Recharts BarChart.
+
+### UpdatesTable
+Lists recent price updates with columns for time, price, count, and trend indicators.
+
+## ⚙️ Configuration
+
+### Backend Configuration (`application.yml`)
+
 ```yaml
+server:
+  port: 8080
+
 spring:
-  kafka:
-    bootstrap-servers: localhost:9092
   data:
     mongodb:
       uri: mongodb://localhost:27017/coinbase_analytics
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
 ```
 
-### Flink
-- Kafka topic: `coinbase-market-data`
-- Consumer group: `coinbase-flink-group`
+### Frontend Configuration (`api.js`)
 
-## 🤝 Contributing
+```javascript
+const API_BASE_URL = 'http://localhost:8080/api';
+```
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### Flink Configuration
 
-## 📄 License
+- **Kafka Topic:** `coinbase-market-data`
+- **Consumer Group:** `coinbase-flink-group`
+- **Window Size:** 10 seconds (tumbling)
+- **MongoDB Collection:** `price_analytics`
 
-This project is licensed under the MIT License.
+## 🔄 Data Flow Details
+
+### 1. WebSocket Streaming
+```java
+// Connects to Coinbase Pro WebSocket
+URI coinbaseUri = new URI("wss://ws-feed.exchange.coinbase.com");
+// Subscribes to ticker channel for BTC-USD
+```
+
+### 2. Kafka Message Format
+```json
+{
+  "type": "ticker",
+  "product_id": "BTC-USD",
+  "price": "90046.15",
+  "time": "2026-01-03T10:15:00.000000Z"
+}
+```
+
+### 3. Flink Processing
+- Groups by symbol (BTC-USD)
+- Tumbling window of 10 seconds
+- Calculates average price and count
+- Outputs to MongoDB sink
+
+### 4. MongoDB Document
+```javascript
+{
+  "_id": ObjectId("..."),
+  "symbol": "BTC-USD",
+  "avgPrice": 90046.15,
+  "count": 13978,
+  "timestamp": 1735902900000,
+  "formattedTime": "2026-01-03T10:15:00Z"
+}
+```
+
+## 🐛 Troubleshooting
+
+### Backend Issues
+
+**Error: Connection refused to MongoDB**
+```bash
+# Check if MongoDB is running
+docker ps | grep mongo
+
+# Restart MongoDB
+cd coinbase-docker
+docker-compose restart mongodb
+```
+
+**Error: Kafka connection timeout**
+```bash
+# Verify Kafka is running
+docker logs coinbase-kafka
+
+# Restart Kafka
+docker-compose restart kafka zookeeper
+```
+
+### Frontend Issues
+
+**Error: "Failed to fetch data"**
+- ✅ Ensure backend is running on `localhost:8080`
+- ✅ Check CORS settings in `WebConfig.java`
+- ✅ Verify MongoDB has data: `db.price_analytics.find().limit(5)`
+
+**Charts not displaying**
+- ✅ Check browser console for errors
+- ✅ Ensure data format matches expected structure
+- ✅ Verify API endpoint returns valid JSON
+
+### Flink Issues
+
+**Job not starting**
+```bash
+# Check if Flink dependencies are installed
+mvn dependency:tree
+
+# Rebuild with clean install
+mvn clean install
+```
+
+**No data in MongoDB**
+- ✅ Verify Kafka has messages: `docker exec -it coinbase-kafka kafka-console-consumer --bootstrap-server localhost:9092 --topic coinbase-market-data --from-beginning`
+- ✅ Check Flink job logs for errors
+- ✅ Ensure MongoDB connection string is correct
+
+## 📊 Monitoring
+
+### Kafka
+```bash
+# List topics
+docker exec -it coinbase-kafka kafka-topics --list --bootstrap-server localhost:9092
+
+# View messages
+docker exec -it coinbase-kafka kafka-console-consumer --bootstrap-server localhost:9092 --topic coinbase-market-data --from-beginning
+```
+
+### MongoDB
+```bash
+# Connect to MongoDB
+docker exec -it coinbase-mongo mongosh
+
+# Use database
+use coinbase_analytics
+
+# Query data
+db.price_analytics.find().sort({timestamp: -1}).limit(10)
+```
+
+### Logs
+```bash
+# Backend logs
+cd coinbase-backend
+tail -f logs/spring-boot.log
+
+# Docker logs
+docker-compose logs -f
+```
+
+## 🚢 Production Deployment
+
+### Checklist
+- [ ] Update API URLs in frontend (`api.js`)
+- [ ] Configure CORS for production domain
+- [ ] Enable MongoDB authentication
+- [ ] Set up Kafka SSL/SASL
+- [ ] Build frontend: `npm run build`
+- [ ] Package backend: `mvn clean package`
+- [ ] Use environment variables for sensitive config
+- [ ] Set up monitoring and alerting
+- [ ] Configure proper logging levels
+
+### Docker Deployment
+```bash
+# Build all images
+docker-compose -f docker-compose.prod.yml build
+
+# Start services
+docker-compose -f docker-compose.prod.yml up -d
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 👤 Author
 
-Your Name - [@yourusername](https://github.com/yourusername)
+**Rohana**
+
+Built with ❤️ using Spring Boot, Apache Flink, React, and Kafka.
 
 ## 🙏 Acknowledgments
 
-- Coinbase Pro WebSocket API
-- Apache Kafka
-- Apache Flink
-- Spring Boot
+- [Coinbase Pro WebSocket API](https://docs.cloud.coinbase.com/exchange/docs/websocket-overview)
+- [Apache Kafka](https://kafka.apache.org/)
+- [Apache Flink](https://flink.apache.org/)
+- [Spring Boot](https://spring.io/projects/spring-boot)
+- [React](https://react.dev/)
+- [MongoDB](https://www.mongodb.com/)
+
+---
+
+⭐ **Star this repo if you found it helpful!**

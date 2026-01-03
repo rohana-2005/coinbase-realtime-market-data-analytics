@@ -106,120 +106,43 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <div className="max-w-[1800px] mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Left Panel - Main Dashboard */}
-          <div className="xl:col-span-2 space-y-6">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <StatCard 
-                title="Avg. Price" 
-                value={formatPrice(summary?.avgPrice)}
-                subtitle="BTC-USD"
-              />
-              <StatCard 
-                title="Updates (10s)" 
-                value={summary?.totalUpdates?.toLocaleString() || '0'}
-                subtitle="Live updates"
-              />
-              <StatCard 
-                title="Last Update" 
-                value={summary?.timestamp ? formatTime(summary.timestamp) : 'N/A'}
-                subtitle="Real-time"
-              />
-            </div>
-
-            {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <PriceChart 
-                data={recentData} 
-                title="BTC-USD Average Price (10s)"
-              />
-              <CountChart 
-                data={recentData} 
-                title="BTC Price Updates (10s)"
-              />
-            </div>
-
-            {/* Updates Table */}
-            <UpdatesTable 
-              data={recentData.slice().reverse().slice(0, 10)} 
-              title="Latest Updates (10s)"
+        <div className="space-y-6">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <StatCard 
+              title="Avg. Price" 
+              value={formatPrice(summary?.avgPrice)}
+              subtitle="BTC-USD"
+            />
+            <StatCard 
+              title="Updates (10s)" 
+              value={summary?.totalUpdates?.toLocaleString() || '0'}
+              subtitle="Live updates"
+            />
+            <StatCard 
+              title="Last Update" 
+              value={summary?.timestamp ? formatTime(summary.timestamp) : 'N/A'}
+              subtitle="Real-time"
             />
           </div>
 
-          {/* Right Panel - Live Analytics */}
-          <div className="space-y-6">
-            <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-700">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold">BTC-USD Live Analytics</h2>
-                <div className="text-xs text-green-400 flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  +{summary?.totalUpdates || 0}
-                </div>
-              </div>
-
-              {/* Current Stats */}
-              <div className="space-y-4 mb-6">
-                <div>
-                  <div className="text-sm text-slate-400 mb-1">Avg Price</div>
-                  <div className="text-3xl font-bold text-white">
-                    {formatPrice(summary?.avgPrice)}
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-xs text-slate-400 mb-1">Time</div>
-                    <div className="text-sm text-slate-300">
-                      {summary?.timestamp ? formatTime(summary.timestamp) : 'N/A'}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-slate-400 mb-1">Last Update</div>
-                    <div className="text-sm text-slate-300">
-                      {summary?.lastUpdate ? new Date(summary.lastUpdate).toLocaleTimeString() : 'N/A'}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Mini Chart */}
-              <div className="mb-6">
-                <div className="text-sm text-slate-400 mb-3">BTC-USD Average Price (10s)</div>
-                <PriceChart data={recentData.slice(-10)} title="" />
-              </div>
-
-              {/* Mini Chart 2 */}
-              <div className="mb-6">
-                <div className="text-sm text-slate-400 mb-3">Price Updates (10s)</div>
-                <CountChart data={recentData.slice(-10)} title="" />
-              </div>
-
-              {/* Latest Updates */}
-              <div>
-                <div className="text-sm text-slate-400 mb-3">Latest Updates (10s)</div>
-                <div className="space-y-2">
-                  {recentData.slice(-4).reverse().map((item, index) => (
-                    <div 
-                      key={item.id || index} 
-                      className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg border border-slate-700"
-                    >
-                      <div className="flex flex-col">
-                        <span className="text-xs text-slate-400">
-                          {formatTime(item.timestamp)}
-                        </span>
-                        <span className="text-sm font-semibold text-white">
-                          {formatPrice(item.avgPrice)}
-                        </span>
-                      </div>
-                      <span className="text-sm text-slate-300">
-                        {item.count?.toLocaleString()}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+          {/* Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <PriceChart 
+              data={recentData} 
+              title="BTC-USD Average Price (10s)"
+            />
+            <CountChart 
+              data={recentData} 
+              title="BTC Price Updates (10s)"
+            />
           </div>
+
+          {/* Updates Table */}
+          <UpdatesTable 
+            data={recentData.slice().reverse().slice(0, 10)} 
+            title="Latest Updates (10s)"
+          />
         </div>
       </div>
     </div>

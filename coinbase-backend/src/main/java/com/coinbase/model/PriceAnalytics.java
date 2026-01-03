@@ -89,10 +89,10 @@ public class PriceAnalytics {
         return "PriceAnalytics{" +
                 "id='" + id + '\'' +
                 ", symbol='" + symbol + '\'' +
+                ", avgPrice=" + avgPrice +
+                ", count=" + count +
                 ", windowSeconds=" + windowSeconds +
-                ", timestamp='" + timestamp
-                ", timestamp=" + timestamp +
-                ", formattedTime='" + formattedTime + '\'' +
+                ", timestamp='" + timestamp + '\'' +
                 '}';
     }
 }
