@@ -1,5 +1,10 @@
 # 🪙 Coinbase Real-Time Analytics Dashboard
 
+![Build Status](https://github.com/YOUR-USERNAME/coinbase-realtime-analytics/workflows/Build%20and%20Test/badge.svg)
+![License](https://img.shields.io/badge/License-MIT-blue.svg)
+![Java](https://img.shields.io/badge/Java-17-orange)
+![React](https://img.shields.io/badge/React-18-61DAFB)
+
 A distributed real-time cryptocurrency market analytics platform that streams, processes, and visualizes Bitcoin price data using modern microservices architecture.
 
 ![Dashboard Preview](images/dashboard.png)
