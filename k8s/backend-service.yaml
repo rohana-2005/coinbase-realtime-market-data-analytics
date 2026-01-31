@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: coinbase
+spec:
+  selector:
+    app: backend
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      name: http

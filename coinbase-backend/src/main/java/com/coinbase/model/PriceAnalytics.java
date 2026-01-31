@@ -11,6 +11,22 @@ public class PriceAnalytics {
     @Id
     private String id;
     private String symbol;
+    private Double price;
+    
+    @Field("volume_24h")
+    private Double volume24h;
+    
+    @Field("high_24h")
+    private Double high24h;
+    
+    @Field("low_24h")
+    private Double low24h;
+    
+    @Field("best_bid")
+    private Double bestBid;
+    
+    @Field("best_ask")
+    private Double bestAsk;
     
     @Field("avg_price")
     private Double avgPrice;
@@ -39,6 +55,54 @@ public class PriceAnalytics {
 
     public void setSymbol(String symbol) {
         this.symbol = symbol;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
+    }
+
+    public Double getVolume24h() {
+        return volume24h;
+    }
+
+    public void setVolume24h(Double volume24h) {
+        this.volume24h = volume24h;
+    }
+
+    public Double getHigh24h() {
+        return high24h;
+    }
+
+    public void setHigh24h(Double high24h) {
+        this.high24h = high24h;
+    }
+
+    public Double getLow24h() {
+        return low24h;
+    }
+
+    public void setLow24h(Double low24h) {
+        this.low24h = low24h;
+    }
+
+    public Double getBestBid() {
+        return bestBid;
+    }
+
+    public void setBestBid(Double bestBid) {
+        this.bestBid = bestBid;
+    }
+
+    public Double getBestAsk() {
+        return bestAsk;
+    }
+
+    public void setBestAsk(Double bestAsk) {
+        this.bestAsk = bestAsk;
     }
 
     public Double getAvgPrice() {
@@ -89,6 +153,12 @@ public class PriceAnalytics {
         return "PriceAnalytics{" +
                 "id='" + id + '\'' +
                 ", symbol='" + symbol + '\'' +
+                ", price=" + price +
+                ", volume24h=" + volume24h +
+                ", high24h=" + high24h +
+                ", low24h=" + low24h +
+                ", bestBid=" + bestBid +
+                ", bestAsk=" + bestAsk +
                 ", avgPrice=" + avgPrice +
                 ", count=" + count +
                 ", windowSeconds=" + windowSeconds +

@@ -22,7 +22,9 @@ const Dashboard = () => {
       ]);
 
       setSummary(summaryRes.data);
-      setRecentData(recentRes.data.reverse()); // Reverse to show oldest first for charts
+      // Ensure recentRes.data is an array before calling reverse
+      const recentDataArray = Array.isArray(recentRes.data) ? recentRes.data : [];
+      setRecentData(recentDataArray.reverse()); // Reverse to show oldest first for charts
       setError(null);
       setLastUpdate(new Date());
     } catch (err) {

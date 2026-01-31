@@ -55,16 +55,22 @@ public class AnalyticsController {
             return ResponseEntity.ok(Map.of("message", "No data available"));
         }
 
-        // Get last 10 records to calculate total updates
+        // Get last 10 records to calculate total updates and average price
         Pageable pageable = PageRequest.of(0, 10);
         List<PriceAnalytics> recentData = repository.findBySymbolOrderByTimestampDesc(symbol, pageable);
         
-        int totalUpdates = recentData.stream()
-                .mapToInt(PriceAnalytics::getCount)
-                .sum();
+        // Calculate average price from recent data
+        double avgPrice = recentData.stream()
+                .filter(p -> p.getPrice() != null)
+                .mapToDouble(PriceAnalytics::getPrice)
+                .average()
+                .orElse(latest.getPrice() != null ? latest.getPrice() : 0.0);
+        
+        // Total updates is the count of recent records
+        int totalUpdates = recentData.size();
 
         Map<String, Object> summary = new HashMap<>();
-        summary.put("avgPrice", latest.getAvgPrice());
+        summary.put("avgPrice", avgPrice);
         summary.put("totalUpdates", totalUpdates);
         summary.put("lastUpdate", latest.getTimestamp());
         summary.put("timestamp", latest.getTimestampMillis());
