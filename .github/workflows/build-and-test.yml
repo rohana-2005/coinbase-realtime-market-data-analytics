@@ -56,8 +56,7 @@ jobs:
     - name: Install Dependencies
       run: |
         cd coinbase-frontend
-        npm config set optional=true
-        npm ci
+        npm ci --include=optional
         
     - name: Build Frontend
       run: |
