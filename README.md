@@ -20,11 +20,174 @@ A distributed real-time cryptocurrency market analytics platform that streams, p
 
 ## 🏗️ Architecture
 
-```
-Coinbase WebSocket → Spring Boot → Kafka → Apache Flink → MongoDB → REST API → React Dashboard
+### System Architecture Diagram
+
+```mermaid
+graph TB
+    subgraph "External Services"
+        CB[Coinbase WebSocket API<br/>wss://ws-feed.exchange.coinbase.com]
+    end
+
+    subgraph "Kubernetes Cluster - Namespace: coinbase"
+        subgraph "Backend Service"
+            BE[Spring Boot Backend<br/>Port 8080<br/>WebSocket Client + REST API]
+        end
+
+        subgraph "Message Queue"
+            ZK[Zookeeper<br/>Port 2181<br/>Kafka Coordination]
+            KF[Kafka Broker<br/>Port 9092<br/>Topic: coinbase-market-data]
+        end
+
+        subgraph "Stream Processing"
+            FJM[Flink JobManager<br/>Port 8081<br/>Job Coordination]
+            FTM[Flink TaskManager<br/>Processing Engine<br/>10s Tumbling Windows]
+        end
+
+        subgraph "Data Storage"
+            MDB[(MongoDB<br/>Port 27017<br/>Database: coinbase_analytics<br/>Collection: price_analytics)]
+        end
+
+        subgraph "Frontend Service"
+            FE[React Dashboard<br/>Port 80<br/>Vite + TailwindCSS]
+        end
+    end
+
+    subgraph "CI/CD Pipeline"
+        GHA[GitHub Actions<br/>Build & Test]
+        GH[GitHub Repository<br/>rohana-2005/coinbase-realtime-analytics]
+    end
+
+    CB -->|Live Market Data<br/>BTC-USD Ticker| BE
+    BE -->|Produce Messages| KF
+    KF -.->|Coordination| ZK
+    KF -->|Consume Stream| FTM
+    FJM -.->|Manage| FTM
+    FTM -->|Write Aggregated Data| MDB
+    BE -->|Store Raw Tickers| MDB
+    MDB -->|Query Analytics| BE
+    BE -->|REST API<br/>JSON Response| FE
+    FE -->|HTTP Requests<br/>Every 5s| BE
+    
+    GH -->|Push Code| GHA
+    GHA -->|Build Images| BE
+    GHA -->|Build Images| FE
+    GHA -->|Build JAR| FTM
+
+    style CB fill:#ff6b6b,stroke:#c92a2a,color:#fff
+    style BE fill:#4dabf7,stroke:#1971c2,color:#fff
+    style KF fill:#51cf66,stroke:#2f9e44,color:#fff
+    style ZK fill:#94d82d,stroke:#5c940d,color:#fff
+    style FJM fill:#ffd43b,stroke:#f59f00,color:#000
+    style FTM fill:#ffd43b,stroke:#f59f00,color:#000
+    style MDB fill:#845ef7,stroke:#5f3dc4,color:#fff
+    style FE fill:#ff8787,stroke:#fa5252,color:#fff
+    style GHA fill:#74c0fc,stroke:#1c7ed6,color:#fff
 ```
 
-### System Flow
+### Data Flow Sequence
+
+```mermaid
+sequenceDiagram
+    participant CB as Coinbase WebSocket
+    participant BE as Spring Boot Backend
+    participant KF as Kafka
+    participant FL as Flink
+    participant DB as MongoDB
+    participant FE as React Frontend
+
+    CB->>BE: Stream BTC-USD Ticker<br/>(price, volume, high, low)
+    BE->>KF: Publish to Topic<br/>coinbase-market-data
+    BE->>DB: Save Raw Ticker<br/>(PriceAnalytics)
+    
+    KF->>FL: Consume Message Stream
+    FL->>FL: Process 10s Window<br/>(aggregate data)
+    FL->>DB: Write Aggregated Stats<br/>(avg, count, timestamp)
+    
+    loop Every 5 seconds
+        FE->>BE: GET /api/analytics/recent
+        BE->>DB: Query last 100 records
+        DB-->>BE: Return analytics data
+        BE-->>FE: JSON response
+        FE->>FE: Update charts & tables
+    end
+
+    FE->>BE: GET /api/analytics/summary
+    BE->>DB: Aggregate last 10 records
+    DB-->>BE: Calculate avg price & count
+    BE-->>FE: Summary stats
+```
+
+### Deployment Architecture
+
+```mermaid
+graph LR
+    subgraph "Local Development"
+        DEV[Developer]
+    end
+
+    subgraph "GitHub"
+        REPO[Repository]
+        ACTIONS[GitHub Actions CI]
+    end
+
+    subgraph "Minikube - Local K8s"
+        direction TB
+        NS[Namespace: coinbase]
+        
+        subgraph "Pods"
+            P1[backend-xxx]
+            P2[frontend-xxx]
+            P3[kafka-xxx]
+            P4[zookeeper-xxx]
+            P5[mongodb-xxx]
+            P6[flink-jobmanager-xxx]
+            P7[flink-taskmanager-xxx]
+        end
+
+        subgraph "Services"
+            S1[backend-service<br/>NodePort: 30080]
+            S2[frontend-service<br/>NodePort: 30090]
+            S3[kafka-service]
+            S4[mongodb-service]
+            S5[flink-jobmanager-service]
+        end
+
+        subgraph "Storage"
+            PVC[PersistentVolumeClaim<br/>mongodb-storage: 5Gi]
+        end
+    end
+
+    DEV -->|git push| REPO
+    REPO -->|trigger| ACTIONS
+    ACTIONS -->|build & test| ACTIONS
+    DEV -->|kubectl apply -f k8s/| NS
+    NS --> P1 & P2 & P3 & P4 & P5 & P6 & P7
+    S1 --> P1
+    S2 --> P2
+    S3 --> P3
+    S4 --> P5
+    S5 --> P6
+    P5 --> PVC
+
+    style NS fill:#e3fafc,stroke:#0c8599
+    style ACTIONS fill:#74c0fc,stroke:#1c7ed6,color:#fff
+```
+
+### Technology Stack Overview
+
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| **External API** | Coinbase WebSocket | Real-time market data source |
+| **Backend** | Spring Boot 3.2.0 | REST API + WebSocket client + Kafka producer |
+| **Message Queue** | Apache Kafka | Distributed streaming platform |
+| **Stream Processing** | Apache Flink 1.18 | Real-time data aggregation (10s windows) |
+| **Database** | MongoDB 6 | NoSQL storage for analytics |
+| **Frontend** | React 18 + Vite | Interactive dashboard with charts |
+| **Containerization** | Docker | Service isolation and deployment |
+| **Orchestration** | Kubernetes (Minikube) | Container management and scaling |
+| **CI/CD** | GitHub Actions | Automated testing and builds |
+
+### Key Features
 1. **WebSocket Client** connects to Coinbase Pro and subscribes to BTC-USD ticker
 2. **Kafka Producer** publishes real-time price updates to message queue
 3. **Flink Job** processes stream data using 10-second tumbling windows
