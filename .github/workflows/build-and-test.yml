@@ -53,15 +53,18 @@ jobs:
       with:
         node-version: '20'
         
+    - name: Install pnpm
+      run: npm install -g pnpm
+        
     - name: Install Dependencies
       run: |
         cd coinbase-frontend
-        npm ci --include=optional
+        pnpm install
         
     - name: Build Frontend
       run: |
         cd coinbase-frontend
-        npm run build
+        pnpm run build
         
     - name: Build Frontend Docker Image
       run: |
