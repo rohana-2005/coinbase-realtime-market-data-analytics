@@ -587,7 +587,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👤 Author
 
-**Rohan**
+**Rohana Mahimkar**
 
 Built with ❤️ using Spring Boot, Apache Flink, React, and Kafka.
 
