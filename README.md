@@ -5,7 +5,7 @@
 ![Java](https://img.shields.io/badge/Java-17-orange)
 ![React](https://img.shields.io/badge/React-18-61DAFB)
 
-A distributed real-time cryptocurrency market analytics platform that streams, processes, and visualizes Bitcoin price data using modern microservices architecture.
+A real-time cryptocurrency analytics platform with microservices architecture, processing live Coinbase WebSocket data through Kafka, analyzing with Apache Flink, and visualizing in a React dashboard. Deployed using Kubernetes with CI/CD via GitHub Action
 
 ![Dashboard Preview](images/dashboard.png)
 
