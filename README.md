@@ -16,7 +16,7 @@ A real-time cryptocurrency analytics platform with microservices architecture, p
 - 📈 **Interactive Charts** - Visual representation of price trends and update frequency
 - ⚡ **Live Updates** - Auto-refreshing dashboard every 5 seconds
 - 🎨 **Modern UI** - Responsive design with dark theme using Tailwind CSS
-- 🏗️ **Scalable Architecture** - Microservices-based distributed system
+- 🏗️ **Scalable Architecture** - Microservices-based distributed system.
 
 ## 🏗️ Architecture
 
