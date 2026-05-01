@@ -20,7 +20,7 @@ const LandingPage = ({ onGetStarted }) => {
       </div>
 
       {/* Navigation */}
-      <nav className="relative z-10 w-full px-8 lg:px-16 xl:px-24 py-5 backdrop-blur-sm">
+      <nav className="relative z-10 w-full px-8 lg:px-16 xl:px-24 py-3 backdrop-blur-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 group cursor-pointer">
             <div className="text-2xl transform group-hover:scale-110 transition-transform">🪙</div>
@@ -146,16 +146,10 @@ const LandingPage = ({ onGetStarted }) => {
         </div>
       </div>
 
-      {/* CTA Button */}
+      {/* CTA Button
       <div className="relative z-10 w-full px-8 lg:px-16 xl:px-24 pb-16 text-center">
-        <button 
-          onClick={onGetStarted}
-          className="group px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-bold text-base hover:shadow-2xl hover:shadow-emerald-500/50 hover:scale-110 transition-all duration-300 flex items-center gap-3 mx-auto"
-        >
-          <span>Get Started Now</span>
-          <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
-        </button>
-      </div>
+       
+      </div> */}
 
       {/* Features Section */}
       <div className="relative z-10 w-full px-8 lg:px-16 xl:px-24 pb-20">
@@ -247,19 +241,7 @@ const LandingPage = ({ onGetStarted }) => {
         </div>
       </div>
 
-      {/* Scroll indicator with enhanced animation */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
-        <div className="flex flex-col items-center gap-2 text-slate-400 animate-bounce">
-          <span className="text-sm font-medium bg-slate-800/50 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-700/50">
-            Scroll to view dashboard
-          </span>
-          <div className="w-10 h-10 rounded-full bg-gradient-to-b from-emerald-500/20 to-transparent flex items-center justify-center">
-            <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-            </svg>
-          </div>
-        </div>
-      </div>
+      
     </div>
   );
 };
