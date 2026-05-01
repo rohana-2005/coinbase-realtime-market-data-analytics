@@ -21,7 +21,7 @@ public class CoinbaseFlinkJob {
 
     public static void main(String[] args) throws Exception {
 
-        System.out.println("🚀 Starting Flink Job...");
+        System.out.println("[START] Starting Flink Job (Multi-Coin)...");
 
         StreamExecutionEnvironment env =
                 StreamExecutionEnvironment.getExecutionEnvironment();
@@ -31,7 +31,7 @@ public class CoinbaseFlinkJob {
                 .setBootstrapServers("localhost:9092")
                 .setTopics("coinbase-market-data")
                 .setGroupId("coinbase-flink-group")
-                .setStartingOffsets(OffsetsInitializer.earliest())
+                .setStartingOffsets(OffsetsInitializer.latest())
                 .setValueOnlyDeserializer(new SimpleStringSchema())
                 .build();
 
@@ -41,7 +41,7 @@ public class CoinbaseFlinkJob {
                 "Kafka Source"
         );
 
-        // Parse JSON and extract price data
+        // Parse JSON and extract price data (all coins pass through)
         ObjectMapper mapper = new ObjectMapper();
 
         DataStream<PriceData> priceStream = stream
@@ -55,7 +55,7 @@ public class CoinbaseFlinkJob {
                             return new PriceData(symbol, price, timestamp);
                         }
                     } catch (Exception e) {
-                        System.err.println("❌ Error parsing JSON: " + e.getMessage());
+                        System.err.println("[ERROR] Error parsing JSON: " + e.getMessage());
                     }
                     return null;
                 })
@@ -64,13 +64,14 @@ public class CoinbaseFlinkJob {
         // Print raw data for debugging
         priceStream.print();
 
-        // Compute 10-second window average and send to MongoDB
+        // KEY CHANGE: Group by symbol so each coin gets its own independent 10-second window
         priceStream
-                .windowAll(TumblingProcessingTimeWindows.of(Time.seconds(10)))
+                .keyBy(data -> data.getSymbol())
+                .window(TumblingProcessingTimeWindows.of(Time.seconds(10)))
                 .aggregate(new AverageAggregate())
                 .map(avgData -> {
                     Document doc = new Document();
-                    doc.append("symbol", "BTC-USD");
+                    doc.append("symbol", avgData.symbol);          // ← dynamic, from keyBy
                     doc.append("avg_price", avgData.avgPrice);
                     doc.append("count", avgData.count);
                     doc.append("window_seconds", 10);
@@ -80,15 +81,16 @@ public class CoinbaseFlinkJob {
                 })
                 .addSink(new MongoSink());
 
-        System.out.println("✅ Flink job configured");
-        System.out.println("📊 Consuming from: coinbase-market-data");
-        System.out.println("🔄 Processing live market data...");
-        System.out.println("💾 Storing aggregates in MongoDB every 10 seconds");
+        System.out.println("[OK] Flink job configured for multi-coin processing");
+        System.out.println("[INFO] Consuming from: coinbase-market-data");
+        System.out.println("[INFO] Processing: BTC-USD, ETH-USD, SOL-USD, DOGE-USD");
+        System.out.println("[INFO] Each coin gets its own independent 10-second window");
+        System.out.println("[INFO] Storing per-coin aggregates in MongoDB every 10 seconds");
 
-        env.execute("Coinbase Kafka → Flink → MongoDB");
+        env.execute("Coinbase Multi-Coin: Kafka → Flink → MongoDB");
     }
 
-    // Aggregate function to compute average
+    // Aggregate function — accumulator carries symbol so it survives the window
     public static class AverageAggregate implements AggregateFunction<PriceData, AverageAccumulator, AverageResult> {
 
         @Override
@@ -98,6 +100,7 @@ public class CoinbaseFlinkJob {
 
         @Override
         public AverageAccumulator add(PriceData value, AverageAccumulator accumulator) {
+            accumulator.symbol = value.getSymbol(); // carry symbol through
             accumulator.sum += value.getPrice();
             accumulator.count++;
             return accumulator;
@@ -106,6 +109,7 @@ public class CoinbaseFlinkJob {
         @Override
         public AverageResult getResult(AverageAccumulator accumulator) {
             return new AverageResult(
+                    accumulator.symbol,
                     accumulator.count > 0 ? accumulator.sum / accumulator.count : 0.0,
                     accumulator.count
             );
@@ -115,22 +119,26 @@ public class CoinbaseFlinkJob {
         public AverageAccumulator merge(AverageAccumulator a, AverageAccumulator b) {
             a.sum += b.sum;
             a.count += b.count;
+            if (a.symbol == null) a.symbol = b.symbol;
             return a;
         }
     }
 
-    // Accumulator for sum and count
+    // Accumulator — now carries symbol
     public static class AverageAccumulator {
+        String symbol = null;
         double sum = 0.0;
         long count = 0;
     }
 
-    // Result with average and count
+    // Result — now carries symbol
     public static class AverageResult {
+        String symbol;
         double avgPrice;
         long count;
 
-        public AverageResult(double avgPrice, long count) {
+        public AverageResult(String symbol, double avgPrice, long count) {
+            this.symbol = symbol;
             this.avgPrice = avgPrice;
             this.count = count;
         }

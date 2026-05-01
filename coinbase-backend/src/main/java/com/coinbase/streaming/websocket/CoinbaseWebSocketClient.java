@@ -47,7 +47,7 @@ public class CoinbaseWebSocketClient {
                       "channels": [
                         {
                           "name": "ticker",
-                          "product_ids": ["BTC-USD"]
+                          "product_ids": ["BTC-USD", "ETH-USD", "SOL-USD", "DOGE-USD"]
                         }
                       ]
                     }
