@@ -23,26 +23,36 @@ const PriceChart = ({ data, title }) => {
           <p className="text-slate-400 text-xs mb-1">
             {formatTime(payload[0].payload.timestamp)}
           </p>
-          <p className="text-white font-semibold">
+          <p className="text-emerald-400 font-semibold text-base">
             {formatPrice(payload[0].value)}
           </p>
+          {payload[0].payload.count && (
+            <p className="text-slate-300 text-xs mt-1">
+              Updates: {payload[0].payload.count}
+            </p>
+          )}
         </div>
       );
     }
     return null;
   };
 
+  // Filter data to only include valid entries with price values
+  const chartData = data.filter(item => item && item.avgPrice != null && item.avgPrice > 0);
+
   return (
     <div className="bg-slate-800/50 rounded-lg p-5 border border-slate-700">
       <h3 className="text-sm font-medium text-slate-300 mb-4">{title}</h3>
       <ResponsiveContainer width="100%" height={200}>
-        <LineChart data={data}>
+        <LineChart data={chartData} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
           <XAxis 
             dataKey="timestamp" 
             tickFormatter={formatTime}
             stroke="#64748b"
-            style={{ fontSize: '11px' }}
+            style={{ fontSize: '10px' }}
+            interval="preserveStartEnd"
+            minTickGap={10}
           />
           <YAxis 
             tickFormatter={(value) => `$${(value/1000).toFixed(0)}k`}
@@ -53,9 +63,10 @@ const PriceChart = ({ data, title }) => {
           <Line 
             type="monotone" 
             dataKey="avgPrice" 
-            stroke="#10b981" 
+            stroke="#34d399" 
             strokeWidth={2}
             dot={false}
+            connectNulls
           />
         </LineChart>
       </ResponsiveContainer>

@@ -22,23 +22,33 @@ const CountChart = ({ data, title }) => {
           <p className="text-white font-semibold">
             Updates: {payload[0].value}
           </p>
+          {payload[0].payload.price && (
+            <p className="text-emerald-400 text-sm font-medium mt-1">
+              Price: ${payload[0].payload.price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+          )}
         </div>
       );
     }
     return null;
   };
 
+  // Filter data to only include valid entries with count values
+  const chartData = data.filter(item => item && item.count != null && item.count > 0);
+
   return (
     <div className="bg-slate-800/50 rounded-lg p-5 border border-slate-700">
       <h3 className="text-sm font-medium text-slate-300 mb-4">{title}</h3>
       <ResponsiveContainer width="100%" height={200}>
-        <BarChart data={data}>
+        <BarChart data={chartData} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
           <XAxis 
             dataKey="timestamp" 
             tickFormatter={formatTime}
             stroke="#64748b"
-            style={{ fontSize: '11px' }}
+            style={{ fontSize: '10px' }}
+            interval="preserveStartEnd"
+            minTickGap={10}
           />
           <YAxis 
             stroke="#64748b"
@@ -47,8 +57,9 @@ const CountChart = ({ data, title }) => {
           <Tooltip content={<CustomTooltip />} />
           <Bar 
             dataKey="count" 
-            fill="#10b981" 
+            fill="#34d399" 
             radius={[4, 4, 0, 0]}
+            minPointSize={2}
           />
         </BarChart>
       </ResponsiveContainer>

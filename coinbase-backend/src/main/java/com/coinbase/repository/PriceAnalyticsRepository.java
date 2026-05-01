@@ -3,6 +3,7 @@ package com.coinbase.repository;
 import com.coinbase.model.PriceAnalytics;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 
@@ -17,4 +18,8 @@ public interface PriceAnalyticsRepository extends MongoRepository<PriceAnalytics
     
     // Find all ordered by timestamp descending
     List<PriceAnalytics> findAllByOrderByTimestampDesc(Pageable pageable);
+    
+    // Find recent records by symbol (no time filter, just get recent)
+    @Query("{ 'symbol': ?0 }")
+    List<PriceAnalytics> findRecentBySymbol(String symbol);
 }

@@ -21,8 +21,14 @@ export const analyticsAPI = {
   getRecent: (symbol = 'BTC-USD', limit = 30) => 
     api.get('/analytics/recent', { params: { symbol, limit } }),
   
+  getHourly: (symbol = 'BTC-USD', hours = 24) => 
+    api.get('/analytics/hourly', { params: { symbol, hours } }),
+  
   getSummary: (symbol = 'BTC-USD') => 
     api.get('/analytics/summary', { params: { symbol } }),
+  
+  getTradingSignal: (symbol = 'BTC-USD') => 
+    api.get('/analytics/signal', { params: { symbol } }),
   
   getHealth: () => 
     api.get('/analytics/health'),

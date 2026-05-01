@@ -1,0 +1,267 @@
+import React from 'react';
+import { Zap, TrendingUp, Bell, ArrowRight, Sparkles } from 'lucide-react';
+import dashboardImage from '../assets/dashboard.png';
+
+const LandingPage = ({ onGetStarted }) => {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white relative overflow-hidden">
+      {/* Animated gradient orbs */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-green-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-1/2 -left-40 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute -bottom-40 right-1/4 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-pulse delay-2000"></div>
+      </div>
+
+      {/* Background pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2364ffda' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+        }}></div>
+      </div>
+
+      {/* Navigation */}
+      <nav className="relative z-10 w-full px-8 lg:px-16 xl:px-24 py-5 backdrop-blur-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 group cursor-pointer">
+            <div className="text-3xl transform group-hover:scale-110 transition-transform">🪙</div>
+            <span className="text-xl font-bold bg-gradient-to-r from-white to-emerald-400 bg-clip-text text-transparent">
+              Crypto Market Dashboard
+            </span>
+            <span className="px-3 py-1 text-xs bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-full shadow-lg shadow-emerald-500/50 animate-pulse">
+              Live
+            </span>
+          </div>
+          <div className="hidden md:flex items-center gap-8 text-sm font-medium">
+            <a href="#home" className="hover:text-emerald-400 transition-all hover:scale-105 relative group">
+              Home
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-400 group-hover:w-full transition-all"></span>
+            </a>
+            <a href="#features" className="hover:text-emerald-400 transition-all hover:scale-105 relative group">
+              Features
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-400 group-hover:w-full transition-all"></span>
+            </a>
+            <a href="#statistics" className="hover:text-emerald-400 transition-all hover:scale-105 relative group">
+              Statistics
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-400 group-hover:w-full transition-all"></span>
+            </a>
+            <a href="#how-it-works" className="hover:text-emerald-400 transition-all hover:scale-105 relative group">
+              How It Works
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-400 group-hover:w-full transition-all"></span>
+            </a>
+            <a href="#contact" className="hover:text-emerald-400 transition-all hover:scale-105 relative group">
+              Contact
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-emerald-400 group-hover:w-full transition-all"></span>
+            </a>
+          </div>
+          <button 
+            onClick={onGetStarted}
+            className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-emerald-500/50 hover:scale-105 transition-all duration-300 flex items-center gap-2"
+          >
+            Get Started
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <div className="relative z-10 w-full px-8 lg:px-16 xl:px-24 py-12 md:py-16">
+        <div className="grid md:grid-cols-2 gap-12 items-center">
+          {/* Left side - Text */}
+          <div className="space-y-6 animate-fade-in">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800/50 backdrop-blur-sm rounded-full border border-emerald-500/30 shadow-lg shadow-emerald-500/10">
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              <span className="text-sm text-emerald-400 font-medium">Real-Time Market Intelligence</span>
+            </div>
+            
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
+              <span className="bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                Real-Time Crypto
+              </span>
+              <br />
+              <span className="bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400 bg-clip-text text-transparent">
+                Market Tracking
+              </span>
+            </h1>
+            
+            <p className="text-lg md:text-xl text-slate-300 leading-relaxed">
+              Stay updated with live Bitcoin price data and market statistics. 
+              Monitor trends, analyze patterns, and make informed decisions in real-time.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 pt-2">
+              <button 
+                onClick={onGetStarted}
+                className="group px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-semibold hover:shadow-2xl hover:shadow-emerald-500/50 hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                Get Started
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </button>
+              <button 
+                onClick={onGetStarted}
+                className="px-8 py-3.5 bg-slate-800/50 backdrop-blur-sm border-2 border-emerald-500/30 text-emerald-400 rounded-xl font-semibold hover:bg-slate-800 hover:border-emerald-500 hover:shadow-xl hover:shadow-emerald-500/20 transition-all duration-300"
+              >
+                View Live Demo
+              </button>
+            </div>
+
+            {/* Stats */}
+            <div className="flex gap-8 pt-6 border-t border-slate-800">
+              <div>
+                <div className="text-3xl font-bold text-emerald-400">10s</div>
+                <div className="text-sm text-slate-400">Update Interval</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-emerald-400">24/7</div>
+                <div className="text-sm text-slate-400">Live Monitoring</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-emerald-400">Real-Time</div>
+                <div className="text-sm text-slate-400">Market Data</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right side - Dashboard Image */}
+          <div className="relative group">
+            {/* Glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/30 to-teal-500/30 rounded-2xl blur-3xl group-hover:blur-2xl transition-all duration-500 opacity-50 group-hover:opacity-75"></div>
+            
+            {/* Image container with enhanced styling */}
+            <div className="relative rounded-2xl overflow-hidden border border-slate-700/50 shadow-2xl shadow-emerald-500/20 group-hover:shadow-emerald-500/40 group-hover:scale-[1.02] transition-all duration-500">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent"></div>
+              <img 
+                src={dashboardImage}
+                alt="Crypto Dashboard Preview" 
+                className="w-full h-auto relative z-10 transform group-hover:scale-105 transition-transform duration-700"
+              />
+              {/* Overlay gradient on hover */}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            </div>
+
+            {/* Floating badges
+            <div className="absolute -top-4 -right-4 px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-lg shadow-lg shadow-emerald-500/50 animate-bounce">
+              
+            </div> */}
+          </div>
+        </div>
+      </div>
+
+      {/* CTA Button */}
+      <div className="relative z-10 w-full px-8 lg:px-16 xl:px-24 pb-16 text-center">
+        <button 
+          onClick={onGetStarted}
+          className="group px-10 py-4 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-bold text-lg hover:shadow-2xl hover:shadow-emerald-500/50 hover:scale-110 transition-all duration-300 flex items-center gap-3 mx-auto"
+        >
+          <span>Get Started Now</span>
+          <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+        </button>
+      </div>
+
+      {/* Features Section */}
+      <div className="relative z-10 w-full px-8 lg:px-16 xl:px-24 pb-20">
+        <div className="grid md:grid-cols-3 gap-6">
+          {/* Feature 1 */}
+          <div className="group bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-2xl p-8 border border-slate-700/50 text-center hover:border-emerald-500/50 hover:shadow-2xl hover:shadow-emerald-500/20 transition-all duration-500 hover:-translate-y-2">
+            <div className="w-20 h-20 bg-gradient-to-br from-emerald-500/20 to-green-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg shadow-emerald-500/20">
+              <Zap className="w-10 h-10 text-emerald-400 group-hover:animate-pulse" />
+            </div>
+            <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-white to-emerald-400 bg-clip-text text-transparent">
+              Live BTC Price <span className="text-emerald-400">Updates</span>
+            </h3>
+            <p className="text-slate-400 leading-relaxed text-base">
+              Receive live Bitcoin price updates every 10 seconds with real-time market data streaming.
+            </p>
+          </div>
+
+          {/* Feature 2 */}
+          <div className="group bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-2xl p-8 border border-slate-700/50 text-center hover:border-teal-500/50 hover:shadow-2xl hover:shadow-teal-500/20 transition-all duration-500 hover:-translate-y-2">
+            <div className="w-20 h-20 bg-gradient-to-br from-teal-500/20 to-cyan-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg shadow-teal-500/20">
+              <TrendingUp className="w-10 h-10 text-teal-400 group-hover:animate-pulse" />
+            </div>
+            <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-white to-teal-400 bg-clip-text text-transparent">
+              Detailed Market <span className="text-teal-400">Analytics</span>
+            </h3>
+            <p className="text-slate-400 leading-relaxed text-base">
+              Track price trends, volume, and market movements with comprehensive analytics tools.
+            </p>
+          </div>
+
+          {/* Feature 3 */}
+          <div className="group bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-2xl p-8 border border-slate-700/50 text-center hover:border-cyan-500/50 hover:shadow-2xl hover:shadow-cyan-500/20 transition-all duration-500 hover:-translate-y-2">
+            <div className="w-20 h-20 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg shadow-cyan-500/20">
+              <Bell className="w-10 h-10 text-cyan-400 group-hover:animate-pulse" />
+            </div>
+            <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-white to-cyan-400 bg-clip-text text-transparent">
+              Real-Time <span className="text-cyan-400">Alerts</span>
+            </h3>
+            <p className="text-slate-400 leading-relaxed text-base">
+              Get notified about significant market changes instantly with smart alerts system.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Dashboard Preview Section */}
+      <div className="relative z-10 w-full px-8 lg:px-16 xl:px-24 pb-20">
+        <div className="text-center mb-12 space-y-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800/50 backdrop-blur-sm rounded-full border border-slate-700/50">
+            <Sparkles className="w-4 h-4 text-emerald-400" />
+            <span className="text-sm text-slate-300 font-medium">Comprehensive Analytics Platform</span>
+          </div>
+          
+          <h2 className="text-4xl md:text-5xl font-bold">
+            <span className="bg-gradient-to-r from-white via-emerald-400 to-teal-400 bg-clip-text text-transparent">
+              Crypto Market Dashboard
+            </span>
+          </h2>
+          
+          <p className="text-lg text-slate-300 max-w-3xl mx-auto leading-relaxed">
+            Our Crypto Market Dashboard provides real-time data and insights to help you stay ahead 
+            in the cryptocurrency market. Monitor Bitcoin prices, track market trends, and receive instant alerts.
+          </p>
+        </div>
+
+        {/* Features List with enhanced styling */}
+        <div className="max-w-2xl mx-auto space-y-3">
+          {[
+            { text: 'Live BTC Price Updates', color: 'emerald' },
+            { text: 'Detailed Market Analytics', color: 'teal' },
+            { text: 'Instant Price Alerts', color: 'cyan' }
+          ].map((feature, index) => (
+            <div 
+              key={index}
+              className="group flex items-center gap-4 text-base p-4 rounded-xl bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 hover:border-emerald-500/50 hover:bg-slate-800/50 transition-all duration-300 hover:translate-x-2"
+            >
+              <div className={`w-8 h-8 bg-gradient-to-br ${
+                feature.color === 'emerald' ? 'from-emerald-500 to-green-600' :
+                feature.color === 'teal' ? 'from-teal-500 to-cyan-600' :
+                'from-cyan-500 to-blue-600'
+              } rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform`}>
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+              <span className="font-medium group-hover:text-emerald-400 transition-colors">{feature.text}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Scroll indicator with enhanced animation */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
+        <div className="flex flex-col items-center gap-2 text-slate-400 animate-bounce">
+          <span className="text-sm font-medium bg-slate-800/50 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-700/50">
+            Scroll to view dashboard
+          </span>
+          <div className="w-10 h-10 rounded-full bg-gradient-to-b from-emerald-500/20 to-transparent flex items-center justify-center">
+            <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default LandingPage;

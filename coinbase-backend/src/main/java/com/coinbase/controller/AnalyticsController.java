@@ -45,6 +45,71 @@ public class AnalyticsController {
     }
 
     /**
+     * Get 5-minute aggregated data from MongoDB
+     */
+    @GetMapping("/hourly")
+    public ResponseEntity<List<Map<String, Object>>> getHourlyData(
+            @RequestParam(defaultValue = "BTC-USD") String symbol,
+            @RequestParam(defaultValue = "24") int hours) {
+        
+        // Get recent records - fetch more to have enough data
+        // For 5-minute intervals: 1 hour = 60 records (if we have data every 10s, 6 per minute * 5 = 30 per 5-min window)
+        int limit = Math.max(360, hours * 60); // At least 360 records, or hours * 60 for longer periods
+        Pageable pageable = PageRequest.of(0, limit);
+        List<PriceAnalytics> allData = repository.findBySymbolOrderByTimestampDesc(symbol, pageable);
+        
+        if (allData.isEmpty()) {
+            return ResponseEntity.ok(new java.util.ArrayList<>());
+        }
+        
+        // Group by 5-minute intervals and aggregate
+        Map<Long, List<PriceAnalytics>> fiveMinGroups = new java.util.LinkedHashMap<>();
+        
+        for (PriceAnalytics record : allData) {
+            try {
+                long timestamp = record.getTimestampMillis();
+                // Round down to the nearest 5-minute interval (5 minutes = 5 * 60 * 1000 ms)
+                long fiveMinKey = (timestamp / (5 * 60 * 1000)) * (5 * 60 * 1000);
+                
+                fiveMinGroups.computeIfAbsent(fiveMinKey, k -> new java.util.ArrayList<>()).add(record);
+            } catch (Exception e) {
+                // Skip records with invalid timestamps
+                continue;
+            }
+        }
+        
+        // Create aggregated response
+        List<Map<String, Object>> fiveMinData = new java.util.ArrayList<>();
+        
+        for (Map.Entry<Long, List<PriceAnalytics>> entry : fiveMinGroups.entrySet()) {
+            List<PriceAnalytics> intervalRecords = entry.getValue();
+            
+            double avgPrice = intervalRecords.stream()
+                .filter(p -> p.getPrice() != null)
+                .mapToDouble(PriceAnalytics::getPrice)
+                .average()
+                .orElse(0.0);
+            
+            int totalCount = intervalRecords.stream()
+                .mapToInt(p -> p.getCount() != null ? p.getCount() : 0)
+                .sum();
+            
+            Map<String, Object> intervalData = new HashMap<>();
+            intervalData.put("timestamp", entry.getKey());
+            intervalData.put("avgPrice", Math.round(avgPrice * 100.0) / 100.0);
+            intervalData.put("count", totalCount);
+            intervalData.put("records", intervalRecords.size());
+            
+            fiveMinData.add(intervalData);
+        }
+        
+        // Sort by timestamp ascending
+        fiveMinData.sort((a, b) -> Long.compare((Long)a.get("timestamp"), (Long)b.get("timestamp")));
+        
+        return ResponseEntity.ok(fiveMinData);
+    }
+
+    /**
      * Get summary statistics
      */
     @GetMapping("/summary")
@@ -66,8 +131,10 @@ public class AnalyticsController {
                 .average()
                 .orElse(latest.getPrice() != null ? latest.getPrice() : 0.0);
         
-        // Total updates is the count of recent records
-        int totalUpdates = recentData.size();
+        // Total updates is the sum of all count fields from recent records
+        int totalUpdates = recentData.stream()
+                .mapToInt(p -> p.getCount() != null ? p.getCount() : 0)
+                .sum();
 
         Map<String, Object> summary = new HashMap<>();
         summary.put("avgPrice", avgPrice);
@@ -76,6 +143,77 @@ public class AnalyticsController {
         summary.put("timestamp", latest.getTimestampMillis());
 
         return ResponseEntity.ok(summary);
+    }
+
+    /**
+     * Get trading signal (BUY/SELL/HOLD)
+     */
+    @GetMapping("/signal")
+    public ResponseEntity<Map<String, Object>> getTradingSignal(@RequestParam(defaultValue = "BTC-USD") String symbol) {
+        // Get last 30 records (5 minutes of data at 10-sec intervals)
+        Pageable pageable30 = PageRequest.of(0, 30);
+        List<PriceAnalytics> recent30 = repository.findBySymbolOrderByTimestampDesc(symbol, pageable30);
+        
+        if (recent30.size() < 30) {
+            return ResponseEntity.ok(Map.of(
+                "signal", "HOLD",
+                "reason", "Insufficient data for analysis",
+                "confidence", "Low"
+            ));
+        }
+        
+        // Calculate 5-min moving average (last 30 records)
+        double shortMA = recent30.stream()
+                .filter(p -> p.getPrice() != null)
+                .mapToDouble(PriceAnalytics::getPrice)
+                .average()
+                .orElse(0.0);
+        
+        // Get last 90 records for 15-min moving average
+        Pageable pageable90 = PageRequest.of(0, 90);
+        List<PriceAnalytics> recent90 = repository.findBySymbolOrderByTimestampDesc(symbol, pageable90);
+        
+        double longMA = recent90.stream()
+                .filter(p -> p.getPrice() != null)
+                .mapToDouble(PriceAnalytics::getPrice)
+                .average()
+                .orElse(shortMA);
+        
+        double currentPrice = recent30.get(0).getPrice() != null ? recent30.get(0).getPrice() : 0.0;
+        
+        String signal;
+        String reason;
+        String confidence;
+        
+        // Trading logic based on moving average crossover
+        if (currentPrice > shortMA && shortMA > longMA) {
+            signal = "BUY";
+            reason = "Price trending upward (above both moving averages)";
+            confidence = "Medium";
+        } else if (currentPrice < shortMA && shortMA < longMA) {
+            signal = "SELL";
+            reason = "Price trending downward (below both moving averages)";
+            confidence = "Medium";
+        } else if (currentPrice > shortMA) {
+            signal = "HOLD";
+            reason = "Short-term momentum positive, waiting for confirmation";
+            confidence = "Low";
+        } else {
+            signal = "HOLD";
+            reason = "No clear trend detected";
+            confidence = "Low";
+        }
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("signal", signal);
+        response.put("reason", reason);
+        response.put("confidence", confidence);
+        response.put("currentPrice", currentPrice);
+        response.put("ma5min", Math.round(shortMA * 100.0) / 100.0);
+        response.put("ma15min", Math.round(longMA * 100.0) / 100.0);
+        response.put("timestamp", System.currentTimeMillis());
+        
+        return ResponseEntity.ok(response);
     }
 
     /**
