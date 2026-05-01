@@ -35,7 +35,17 @@ public class PriceAnalytics {
     
     @Field("window_seconds")
     private Integer windowSeconds;
-    
+
+    private Double ema;
+
+    private Double rsi;
+
+    @Field("whale_alert")
+    private Boolean whaleAlert;
+
+    @Field("whale_reason")
+    private String whaleReason;
+
     private String timestamp;
 
     public PriceAnalytics() {}
@@ -128,6 +138,18 @@ public class PriceAnalytics {
     public void setWindowSeconds(Integer windowSeconds) {
         this.windowSeconds = windowSeconds;
     }
+
+    public Double getEma() { return ema; }
+    public void setEma(Double ema) { this.ema = ema; }
+
+    public Double getRsi() { return rsi; }
+    public void setRsi(Double rsi) { this.rsi = rsi; }
+
+    public Boolean getWhaleAlert() { return whaleAlert; }
+    public void setWhaleAlert(Boolean whaleAlert) { this.whaleAlert = whaleAlert; }
+
+    public String getWhaleReason() { return whaleReason; }
+    public void setWhaleReason(String whaleReason) { this.whaleReason = whaleReason; }
 
     public String getTimestamp() {
         return timestamp;
