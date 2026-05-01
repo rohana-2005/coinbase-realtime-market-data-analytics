@@ -1,355 +1,489 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Bell, Maximize2, Activity, TrendingUp, TrendingDown, Minus, RefreshCw, X } from 'lucide-react';
+import {
+  LayoutDashboard, BarChart2, Clock, RefreshCw,
+  TrendingUp, TrendingDown, Minus, X, ChevronRight, Activity,
+} from 'lucide-react';
 import { analyticsAPI } from '../services/api';
 import StatCard from '../components/StatCard';
 import PriceChart from '../components/PriceChart';
 import CountChart from '../components/CountChart';
 import UpdatesTable from '../components/UpdatesTable';
 import RSIGauge from '../components/RSIGauge';
+import InfoTooltip from '../components/InfoTooltip';
 
-// ─── Coin Config ─────────────────────────────────────────────────────────────
+// ── Coin registry ─────────────────────────────────────────────────────────────
 const COINS = [
-  { id: 'BTC-USD',  label: 'BTC',  name: 'Bitcoin',   icon: '₿', color: '#f59e0b' },
-  { id: 'ETH-USD',  label: 'ETH',  name: 'Ethereum',  icon: 'Ξ', color: '#8b5cf6' },
-  { id: 'SOL-USD',  label: 'SOL',  name: 'Solana',    icon: '◎', color: '#10b981' },
-  { id: 'DOGE-USD', label: 'DOGE', name: 'Dogecoin',  icon: 'Ð', color: '#eab308' },
+  { id: 'BTC-USD',  label: 'BTC',  name: 'Bitcoin',  color: '#f59e0b', desc: 'Original cryptocurrency' },
+  { id: 'ETH-USD',  label: 'ETH',  name: 'Ethereum', color: '#8b5cf6', desc: 'Smart-contract platform' },
+  { id: 'SOL-USD',  label: 'SOL',  name: 'Solana',   color: '#10b981', desc: 'High-speed blockchain' },
+  { id: 'DOGE-USD', label: 'DOGE', name: 'Dogecoin', color: '#eab308', desc: 'Community-driven coin' },
 ];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-const formatPrice = (price, coinId) => {
+const NAV = [
+  { id: 'dashboard', label: 'Dashboard',   Icon: LayoutDashboard },
+  { id: 'analytics', label: 'Analytics',   Icon: BarChart2 },
+  { id: 'history',   label: 'Live Feed',   Icon: Clock },
+];
+
+// ── Formatters ────────────────────────────────────────────────────────────────
+const fmtPrice = (price, coinId) => {
   if (price == null) return '—';
   const d = coinId === 'DOGE-USD' ? 4 : 2;
   return `$${price.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d })}`;
 };
-const formatTime = (ts) => {
+const fmtTime = (ts) => {
   if (!ts) return '—';
   try { return new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
   catch { return '—'; }
 };
 
-// ─── Whale Alert Banner ───────────────────────────────────────────────────────
-const WhaleAlertBanner = ({ alerts, onDismiss }) => {
+// ── Whale Alert Banner ────────────────────────────────────────────────────────
+const WhaleBanner = ({ alerts, onDismiss }) => {
   if (!alerts.length) return null;
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 animate-fade-in">
       {alerts.map((a, i) => (
-        <div key={i} className="flex items-center justify-between px-5 py-3 rounded-2xl border border-blue-500/40 bg-gradient-to-r from-blue-500/10 to-cyan-500/5 backdrop-blur-sm animate-pulse-slow">
+        <div key={i}
+          className="flex items-center justify-between px-5 py-3 rounded-xl border border-blue-500/30 bg-blue-500/8 backdrop-blur-sm">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🐋</span>
+            <div className="w-7 h-7 rounded-lg bg-blue-500/15 border border-blue-500/30 flex items-center justify-center shrink-0">
+              <Activity className="w-3.5 h-3.5 text-blue-400" />
+            </div>
             <div>
-              <span className="text-blue-300 font-bold text-sm">WHALE ACTIVITY DETECTED</span>
-              <span className="text-slate-400 text-xs ml-3">{a.coin} — {a.reason}</span>
+              <span className="text-blue-300 font-semibold text-xs uppercase tracking-wide">Whale Activity Detected</span>
+              <span className="text-slate-400 text-xs ml-2">— {a.coin}: {a.reason}</span>
             </div>
           </div>
-          <button onClick={() => onDismiss(i)} className="text-slate-500 hover:text-slate-300 transition-colors ml-4">
-            <X className="w-4 h-4"/>
+          <button onClick={() => onDismiss(i)}
+            className="text-slate-600 hover:text-slate-400 transition-colors ml-4 shrink-0">
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
       ))}
+      <p className="text-[11px] text-slate-600 px-1">
+        Unusually high trade volume — large investors may be making significant moves.
+      </p>
     </div>
   );
 };
 
-// ─── Signal Card ─────────────────────────────────────────────────────────────
+// ── Trading Signal card ───────────────────────────────────────────────────────
 const SignalCard = ({ signal, coin }) => {
   if (!signal) return null;
   const isBuy  = signal.signal === 'BUY';
   const isSell = signal.signal === 'SELL';
   const cfg = isBuy
-    ? { bg: 'from-emerald-500/10 to-green-500/5', border: 'border-emerald-500/30', text: 'text-emerald-400', icon: '📈', action: 'Consider a long position' }
+    ? { bg: 'from-emerald-500/8', border: 'border-emerald-500/25', text: 'text-emerald-400', barColor: '#10b981', hint: 'Price is trending upward — algorithm suggests a buy position' }
     : isSell
-    ? { bg: 'from-rose-500/10 to-red-500/5',      border: 'border-rose-500/30',    text: 'text-rose-400',    icon: '📉', action: 'Consider reducing exposure' }
-    : { bg: 'from-amber-500/10 to-yellow-500/5',  border: 'border-amber-500/30',   text: 'text-amber-400',   icon: '⏸️', action: 'Monitor for trend confirmation' };
+    ? { bg: 'from-rose-500/8',    border: 'border-rose-500/25',    text: 'text-rose-400',    barColor: '#f43f5e', hint: 'Price is trending downward — algorithm suggests caution' }
+    : { bg: 'from-amber-500/8',   border: 'border-amber-500/25',   text: 'text-amber-400',   barColor: '#f59e0b', hint: 'No clear trend — algorithm suggests waiting for confirmation' };
 
   return (
-    <div className={`rounded-2xl border bg-gradient-to-r ${cfg.bg} ${cfg.border} backdrop-blur-sm`}>
-      <div className="flex items-center justify-between p-5">
-        <div className="flex items-center gap-4">
-          <div className={`w-12 h-12 rounded-xl flex items-center justify-center bg-slate-800/60 border ${cfg.border}`}>
-            <span className="text-2xl">{cfg.icon}</span>
+    <div className={`rounded-2xl border ${cfg.border} bg-gradient-to-r ${cfg.bg} to-transparent backdrop-blur-sm animate-fade-in`}>
+      <div className="flex items-center gap-4 p-5">
+        {/* Signal value */}
+        <div className="shrink-0 text-center w-20">
+          <div className={`text-2xl font-black tracking-tight ${cfg.text}`}>{signal.signal}</div>
+          <div className={`text-[10px] font-semibold uppercase tracking-widest mt-0.5 ${cfg.text} opacity-70`}>Signal</div>
+        </div>
+
+        <div className="w-px h-10 bg-slate-700/60 shrink-0" />
+
+        {/* Details */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className={`text-xs font-medium ${cfg.text}`}>{signal.reason}</span>
+            <InfoTooltip text="This signal is generated by comparing short-term and long-term moving averages. It is not financial advice." />
           </div>
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <span className={`text-xl font-bold ${cfg.text}`}>{signal.signal}</span>
-              <span className={`px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full border ${
-                signal.confidence === 'High'   ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-                : signal.confidence === 'Medium' ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
-                : 'bg-slate-500/15 text-slate-400 border-slate-500/30'
-              }`}>{signal.confidence} Confidence</span>
-            </div>
-            <p className="text-slate-300 text-sm">{signal.reason}</p>
-            <div className="flex gap-5 mt-2 text-xs text-slate-400">
-              <span>MA(5m): <span className="text-slate-200 font-medium">{formatPrice(signal.ma5min, coin.id)}</span></span>
-              <span>MA(15m): <span className="text-slate-200 font-medium">{formatPrice(signal.ma15min, coin.id)}</span></span>
-              <span>Now: <span className="font-medium" style={{ color: coin.color }}>{formatPrice(signal.currentPrice, coin.id)}</span></span>
-            </div>
+          <div className="flex flex-wrap gap-4 text-xs text-slate-500">
+            <span>5-min avg: <span className="text-slate-300 font-medium">{fmtPrice(signal.ma5min, coin.id)}</span></span>
+            <span>15-min avg: <span className="text-slate-300 font-medium">{fmtPrice(signal.ma15min, coin.id)}</span></span>
+            <span>Now: <span className="font-semibold" style={{ color: coin.color }}>{fmtPrice(signal.currentPrice, coin.id)}</span></span>
           </div>
         </div>
-        <div className="hidden lg:block text-right">
-          <p className="text-xs text-slate-500">Suggestion</p>
-          <p className={`text-sm font-semibold ${cfg.text}`}>{cfg.action}</p>
+
+        {/* Confidence badge */}
+        <div className="shrink-0 hidden sm:block">
+          <span className={`text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full border ${
+            signal.confidence === 'High'
+              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+              : signal.confidence === 'Medium'
+              ? 'bg-amber-500/10 text-amber-400 border-amber-500/25'
+              : 'bg-slate-500/10 text-slate-400 border-slate-500/25'
+          }`}>{signal.confidence} confidence</span>
         </div>
+      </div>
+
+      <div className="px-5 pb-3">
+        <p className="text-[11px] text-slate-500">{cfg.hint}</p>
       </div>
     </div>
   );
 };
 
-// ─── Enhanced Stat Card ───────────────────────────────────────────────────────
-const EnhancedStatCard = ({ title, value, subtitle, trend, coin, icon }) => (
-  <div className="relative overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-800/40 backdrop-blur-sm p-5 group hover:border-slate-600/60 transition-all duration-300 hover:shadow-xl">
-    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"
-      style={{ background: `radial-gradient(circle at top left, ${coin.color}10, transparent 70%)` }} />
-    <div className="relative">
-      <div className="flex items-start justify-between mb-3">
-        <span className="text-xs font-medium uppercase tracking-widest text-slate-500">{title}</span>
-        <span className="text-lg opacity-60">{icon}</span>
-      </div>
-      <div className="text-3xl font-bold text-white tracking-tight mb-1" style={{ fontVariantNumeric: 'tabular-nums' }}>
-        {value}
-      </div>
-      {subtitle && <div className="text-xs text-slate-500">{subtitle}</div>}
-      {trend != null && (
-        <div className={`flex items-center gap-1 mt-2 text-xs font-medium ${trend > 0 ? 'text-emerald-400' : trend < 0 ? 'text-rose-400' : 'text-slate-500'}`}>
-          {trend > 0 ? <TrendingUp className="w-3 h-3"/> : trend < 0 ? <TrendingDown className="w-3 h-3"/> : <Minus className="w-3 h-3"/>}
-          {trend !== 0 ? `${trend > 0 ? '+' : ''}${trend.toFixed(2)}%` : 'Flat'}
+// ── EMA Card ──────────────────────────────────────────────────────────────────
+const EMACard = ({ latestRecord, coin }) => {
+  if (!latestRecord?.ema || !latestRecord?.avgPrice) {
+    return (
+      <div className="rounded-2xl border border-slate-700/50 bg-slate-800/30 p-5 flex flex-col justify-between animate-fade-in stagger-2">
+        <div className="flex items-center mb-3">
+          <span className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">EMA · 14-period</span>
+          <InfoTooltip text="EMA (Exponential Moving Average) smooths out price fluctuations to show the real trend direction. If price is above EMA, momentum is upward." />
         </div>
-      )}
-    </div>
-  </div>
-);
+        <div className="text-2xl font-bold text-slate-600 mb-1">—</div>
+        <p className="text-[11px] text-slate-600">Warming up — collecting trend data</p>
+      </div>
+    );
+  }
 
-// ─── EMA Indicator Badge ──────────────────────────────────────────────────────
-const EMABadge = ({ latestRecord, coin }) => {
-  if (!latestRecord?.ema || !latestRecord?.avgPrice) return null;
-  const price = latestRecord.avgPrice;
-  const ema   = latestRecord.ema;
-  const diff  = price - ema;
-  const pct   = ((diff / ema) * 100).toFixed(2);
-  const above = diff > 0;
+  const price  = latestRecord.avgPrice;
+  const ema    = latestRecord.ema;
+  const diff   = price - ema;
+  const pct    = ((Math.abs(diff) / ema) * 100).toFixed(2);
+  const above  = diff > 0;
+
   return (
-    <div className="rounded-2xl border border-slate-700/50 bg-slate-800/30 backdrop-blur-sm p-5 flex flex-col justify-between">
+    <div className="rounded-2xl border border-slate-700/50 bg-slate-800/30 backdrop-blur-sm p-5 hover:border-slate-600/50 transition-all duration-300 animate-fade-in stagger-2">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-semibold uppercase tracking-widest text-slate-500">EMA-14</span>
-        <span className="text-[10px] uppercase tracking-widest font-medium px-2 py-1 rounded-full bg-slate-700/60 text-slate-400">Trend</span>
+        <div className="flex items-center">
+          <span className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">EMA · 14-period</span>
+          <InfoTooltip text="EMA (Exponential Moving Average) smooths out price fluctuations to show the real trend direction. If price is above EMA, momentum is upward." />
+        </div>
+        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-400 uppercase tracking-wider">
+          Trend
+        </span>
       </div>
-      <div className="text-3xl font-bold text-white tabular-nums mb-1">
-        {formatPrice(ema, coin.id)}
+
+      <div className="text-2xl font-bold text-white tabular-nums mb-3">
+        {fmtPrice(ema, coin.id)}
       </div>
-      <div className={`flex items-center gap-2 text-sm font-semibold ${above ? 'text-emerald-400' : 'text-rose-400'}`}>
-        {above ? <TrendingUp className="w-4 h-4"/> : <TrendingDown className="w-4 h-4"/>}
-        Price is <span>{Math.abs(Number(pct))}% {above ? 'above' : 'below'} EMA</span>
+
+      {/* Price vs EMA bar */}
+      <div className="mb-3">
+        <div className="flex justify-between text-[11px] text-slate-500 mb-1.5">
+          <span>Current price vs smoothed trend</span>
+          <span className={`font-semibold ${above ? 'text-emerald-400' : 'text-rose-400'}`}>
+            {above ? '+' : '-'}{pct}%
+          </span>
+        </div>
+        <div className="h-1.5 rounded-full bg-slate-700 overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all duration-700 ${above ? 'bg-emerald-500' : 'bg-rose-500'}`}
+            style={{ width: `${Math.min(100, Number(pct) * 10)}%` }}
+          />
+        </div>
       </div>
-      <div className="text-xs text-slate-500 mt-1">
-        {above ? 'Bullish — upward momentum' : 'Bearish — downward pressure'}
+
+      <div className={`flex items-center gap-1.5 text-xs font-semibold ${above ? 'text-emerald-400' : 'text-rose-400'}`}>
+        {above ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+        Price is {above ? 'above' : 'below'} the trend line
       </div>
+      <p className="text-[11px] text-slate-500 mt-1">
+        {above ? 'Upward momentum — buyers are in control' : 'Downward pressure — sellers are in control'}
+      </p>
     </div>
   );
 };
 
-// ─── Main Dashboard ───────────────────────────────────────────────────────────
+// ── Main Dashboard ────────────────────────────────────────────────────────────
 const Dashboard = () => {
   const [selectedCoinId, setSelectedCoinId] = useState('BTC-USD');
-  const [summary,      setSummary]      = useState(null);
-  const [recentData,   setRecentData]   = useState([]);
-  const [hourlyData,   setHourlyData]   = useState([]);
-  const [signal,       setSignal]       = useState(null);
-  const [loading,      setLoading]      = useState(true);
-  const [error,        setError]        = useState(null);
-  const [lastUpdate,   setLastUpdate]   = useState(new Date());
-  const [refreshing,   setRefreshing]   = useState(false);
-  const [whaleAlerts,  setWhaleAlerts]  = useState([]);
-  const [dismissedIdx, setDismissedIdx] = useState(new Set());
+  const [activeNav,      setActiveNav]      = useState('dashboard');
+  const [summary,        setSummary]        = useState(null);
+  const [recentData,     setRecentData]     = useState([]);
+  const [hourlyData,     setHourlyData]     = useState([]);
+  const [signal,         setSignal]         = useState(null);
+  const [loading,        setLoading]        = useState(true);
+  const [error,          setError]          = useState(null);
+  const [lastUpdate,     setLastUpdate]     = useState(new Date());
+  const [refreshing,     setRefreshing]     = useState(false);
+  const [whaleAlerts,    setWhaleAlerts]    = useState([]);
+  const [dismissed,      setDismissed]      = useState(new Set());
 
   const coin = COINS.find(c => c.id === selectedCoinId) || COINS[0];
 
-  const fetchData = useCallback(async (sym = selectedCoinId, showSpin = false) => {
-    if (showSpin) setRefreshing(true);
+  const fetchData = useCallback(async (sym = selectedCoinId, spin = false) => {
+    if (spin) setRefreshing(true);
     try {
-      const [sumRes, recRes, hrRes, sigRes] = await Promise.all([
+      const [sumR, recR, hrR, sigR] = await Promise.all([
         analyticsAPI.getSummary(sym),
         analyticsAPI.getRecent(sym, 30),
         analyticsAPI.getHourly(sym, 1),
         analyticsAPI.getTradingSignal(sym),
       ]);
-      setSummary(sumRes.data);
-      const arr = Array.isArray(recRes.data) ? recRes.data : [];
+
+      setSummary(sumR.data);
+      const arr    = Array.isArray(recR.data) ? recR.data : [];
       const sorted = arr.reverse();
       setRecentData(sorted);
-      setHourlyData(Array.isArray(hrRes.data) ? hrRes.data : []);
-      setSignal(sigRes.data);
+      setHourlyData(Array.isArray(hrR.data) ? hrR.data : []);
+      setSignal(sigR.data);
       setError(null);
       setLastUpdate(new Date());
 
-      // Detect whale alerts from most recent records
+      // Whale detection
       const latest = sorted[sorted.length - 1];
       if (latest?.whaleAlert) {
         setWhaleAlerts(prev => {
-          const already = prev.some(a => a.coin === sym && a.reason === latest.whaleReason);
-          if (already) return prev;
-          return [...prev.slice(-2), { coin: sym, reason: latest.whaleReason, ts: Date.now() }];
+          const exists = prev.some(a => a.coin === sym && a.reason === latest.whaleReason);
+          if (exists) return prev;
+          return [...prev.slice(-2), { coin: sym, reason: latest.whaleReason }];
         });
       }
-    } catch (err) {
-      setError('Failed to fetch data. Make sure the backend is running on :8080.');
+    } catch {
+      setError('Could not load market data. Ensure the backend is running on port 8080.');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }, [selectedCoinId]);
 
+  // Reset + fetch when coin changes
   useEffect(() => {
-    setLoading(true); setSummary(null); setRecentData([]); setHourlyData([]); setSignal(null);
+    setLoading(true);
+    setSummary(null); setRecentData([]); setHourlyData([]); setSignal(null);
     fetchData(selectedCoinId);
   }, [selectedCoinId]);
 
+  // Auto-refresh every 5 seconds
   useEffect(() => {
     const id = setInterval(() => fetchData(selectedCoinId), 5000);
     return () => clearInterval(id);
   }, [selectedCoinId, fetchData]);
 
-  const latestRecord  = recentData[recentData.length - 1];
-  const latestRsi     = latestRecord?.rsi;
-  const priceTrend    = recentData.length >= 2
+  const latestRecord = recentData[recentData.length - 1];
+  const latestRsi    = latestRecord?.rsi;
+  const priceTrend   = recentData.length >= 2
     ? ((recentData[recentData.length - 1]?.avgPrice - recentData[0]?.avgPrice) / recentData[0]?.avgPrice) * 100
     : null;
-  const activeAlerts  = whaleAlerts.filter((_, i) => !dismissedIdx.has(i));
+  const activeAlerts = whaleAlerts.filter((_, i) => !dismissed.has(i));
 
+  // Loading screen
   if (loading && !summary) {
     return (
-      <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-2xl"
-            style={{ background: `linear-gradient(135deg,${coin.color}30,${coin.color}10)`, border: `1px solid ${coin.color}40` }}>
-            {coin.icon}
+      <div className="flex h-screen items-center justify-center bg-[#0a0f1a]">
+        <div className="text-center space-y-3">
+          <div className="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center border"
+            style={{ background: `${coin.color}15`, borderColor: `${coin.color}30` }}>
+            <RefreshCw className="w-5 h-5 animate-spin" style={{ color: coin.color }} />
           </div>
-          <div className="flex items-center gap-2 justify-center">
-            <Activity className="w-4 h-4 animate-pulse" style={{ color: coin.color }}/>
-            <p className="text-slate-400 text-sm">Loading live market data…</p>
-          </div>
+          <p className="text-slate-400 text-sm">Loading market data…</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen text-slate-100" style={{ background: 'linear-gradient(135deg,#0a0f1a 0%,#0d1424 50%,#0a0f1a 100%)' }}>
+    <div className="flex h-screen bg-[#0a0f1a] overflow-hidden">
 
-      {/* ── Header ── */}
-      <header className="sticky top-0 z-50 border-b border-slate-800/80 backdrop-blur-xl bg-slate-900/70">
-        <div className="max-w-[1800px] mx-auto px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 border border-slate-600/50 flex items-center justify-center text-lg">📊</div>
+      {/* ── LEFT SIDEBAR ────────────────────────────────────────────────────── */}
+      <aside className="w-[220px] shrink-0 flex flex-col border-r border-slate-800/70 bg-[#0c1220]">
+
+        {/* Brand */}
+        <div className="px-5 py-5 border-b border-slate-800/60">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg border border-slate-700/60 bg-slate-800 flex items-center justify-center">
+              <BarChart2 className="w-3.5 h-3.5 text-slate-400" />
+            </div>
             <div>
-              <div className="font-bold text-white text-sm tracking-tight">Crypto Analytics</div>
-              <div className="text-[10px] text-slate-500 uppercase tracking-widest">Real-Time Dashboard</div>
+              <div className="text-sm font-bold text-white tracking-tight">CryptoMetrics</div>
+              <div className="text-[10px] text-slate-600 uppercase tracking-widest">Real-Time Analytics</div>
             </div>
           </div>
+        </div>
 
-          {/* Coin tabs */}
-          <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-800/60 border border-slate-700/50">
+        {/* Coin selector */}
+        <div className="px-3 pt-5 pb-3">
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 px-2 mb-2">
+            Select Coin
+          </div>
+          <div className="space-y-0.5">
             {COINS.map(c => {
               const active = c.id === selectedCoinId;
               return (
-                <button key={c.id} id={`coin-tab-${c.label.toLowerCase()}`}
+                <button
+                  key={c.id}
+                  id={`coin-${c.label.toLowerCase()}`}
                   onClick={() => setSelectedCoinId(c.id)}
-                  className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${active ? 'text-white shadow-lg' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'}`}
-                  style={active ? { background: `linear-gradient(135deg,${c.color}25,${c.color}10)`, border: `1px solid ${c.color}50`, boxShadow: `0 0 20px ${c.color}15` } : {}}>
-                  <span className="text-base leading-none">{c.icon}</span>
-                  <span>{c.label}</span>
-                  {active && (
-                    <span className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-md" style={{ background: `${c.color}20`, color: c.color }}>
-                      <span className="w-1.5 h-1.5 rounded-full animate-pulse inline-block" style={{ background: c.color }}/>LIVE
-                    </span>
-                  )}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 group ${
+                    active
+                      ? 'text-white'
+                      : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/40'
+                  }`}
+                  style={active ? {
+                    background: `linear-gradient(135deg, ${c.color}18, ${c.color}06)`,
+                    border: `1px solid ${c.color}30`,
+                  } : {}}
+                >
+                  {/* Color dot */}
+                  <span
+                    className={`w-2 h-2 rounded-full shrink-0 transition-all duration-200 ${active ? '' : 'opacity-40 group-hover:opacity-70'}`}
+                    style={{ background: c.color, boxShadow: active ? `0 0 6px ${c.color}60` : 'none' }}
+                  />
+                  <div className="flex-1 text-left">
+                    <div className={`text-sm font-semibold leading-none ${active ? 'text-white' : ''}`}>{c.label}</div>
+                    <div className="text-[10px] text-slate-600 mt-0.5">{c.desc}</div>
+                  </div>
+                  {active && <ChevronRight className="w-3 h-3 shrink-0" style={{ color: c.color }} />}
                 </button>
               );
             })}
           </div>
+        </div>
 
-          <div className="flex items-center gap-3 shrink-0">
-            <button id="manual-refresh-btn" onClick={() => fetchData(selectedCoinId, true)}
-              className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-slate-700/50">
-              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`}/>
-              {formatTime(lastUpdate)}
-            </button>
-            {!error && (
-              <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: coin.color }}/>Streaming
-              </div>
-            )}
-            <div className="w-px h-5 bg-slate-700"/>
-            <Bell className="w-4 h-4 text-slate-500 cursor-pointer hover:text-white transition-colors"/>
-            <Maximize2 className="w-4 h-4 text-slate-500 cursor-pointer hover:text-white transition-colors"/>
+        {/* Divider */}
+        <div className="mx-5 border-t border-slate-800/60 my-1" />
+
+        {/* Navigation */}
+        <div className="px-3 pt-3 pb-3">
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 px-2 mb-2">
+            Navigation
+          </div>
+          <div className="space-y-0.5">
+            {NAV.map(({ id, label, Icon }) => {
+              const active = activeNav === id;
+              return (
+                <button
+                  key={id}
+                  onClick={() => setActiveNav(id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 ${
+                    active
+                      ? 'bg-slate-800/60 text-white border border-slate-700/50'
+                      : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-slate-300' : 'text-slate-600'}`} />
+                  <span className="font-medium">{label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
-      </header>
 
-      {error && (
-        <div className="max-w-[1800px] mx-auto px-6 mt-4">
-          <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl p-4 text-rose-300 text-sm flex items-center gap-2">
-            <span>⚠️</span> {error}
-          </div>
-        </div>
-      )}
+        {/* Spacer */}
+        <div className="flex-1" />
 
-      <main className="max-w-[1800px] mx-auto px-6 py-6 space-y-5">
-
-        {/* Whale Alerts */}
-        <WhaleAlertBanner
-          alerts={activeAlerts}
-          onDismiss={(i) => setDismissedIdx(prev => new Set([...prev, i]))}
-        />
-
-        {/* Coin identity */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl font-bold border"
-              style={{ background: `linear-gradient(135deg,${coin.color}25,${coin.color}08)`, borderColor: `${coin.color}50`, color: coin.color }}>
-              {coin.icon}
+        {/* Live indicator */}
+        <div className="px-5 py-4 border-t border-slate-800/60">
+          {error ? (
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+              <span className="text-[11px] text-rose-400 font-medium">Disconnected</span>
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">{coin.name}</h1>
-              <p className="text-sm text-slate-400">{coin.id} · 10-second Flink aggregation windows</p>
-            </div>
-          </div>
-          {summary?.avgPrice && (
-            <div className="text-right hidden sm:block">
-              <div className="text-2xl font-bold tabular-nums" style={{ color: coin.color }}>
-                {formatPrice(summary.avgPrice, coin.id)}
-              </div>
-              <div className="text-xs text-slate-500">Current Avg Price</div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0" style={{ background: coin.color }} />
+              <span className="text-[11px] text-slate-400 font-medium">Streaming live</span>
             </div>
           )}
+          <p className="text-[10px] text-slate-600 mt-0.5">Updated {fmtTime(lastUpdate)}</p>
         </div>
+      </aside>
 
-        {/* Signal */}
-        <SignalCard signal={signal} coin={coin}/>
+      {/* ── MAIN CONTENT ────────────────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col overflow-hidden">
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <EnhancedStatCard title="Avg. Price" value={formatPrice(summary?.avgPrice, coin.id)}
-            subtitle={`${coin.name} · Recent 10-sec window`} trend={priceTrend} coin={coin} icon={coin.icon}/>
-          <EnhancedStatCard title="Updates (10s)" value={summary?.totalUpdates?.toLocaleString() || '0'}
-            subtitle="Trades aggregated in window" coin={coin} icon="⚡"/>
-          <EnhancedStatCard title="Last Update" value={summary?.timestamp ? formatTime(summary.timestamp) : '—'}
-            subtitle="Real-time from Coinbase WS" coin={coin} icon="🕐"/>
+        {/* Top bar */}
+        <header className="flex items-center justify-between px-7 py-4 border-b border-slate-800/60 bg-[#0a0f1a]/80 backdrop-blur-sm shrink-0">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <div className="w-2 h-2 rounded-full" style={{ background: coin.color }} />
+              <h1 className="text-base font-bold text-white tracking-tight">{coin.name}</h1>
+              <span className="text-xs text-slate-500 font-medium">{coin.id}</span>
+            </div>
+            <p className="text-[11px] text-slate-600 mt-0.5">Data streamed via Coinbase WebSocket · aggregated every 10 seconds</p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Error indicator */}
+            {error && (
+              <span className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 px-3 py-1.5 rounded-lg">
+                Backend offline
+              </span>
+            )}
+            {/* Refresh button */}
+            <button
+              id="refresh-btn"
+              onClick={() => fetchData(selectedCoinId, true)}
+              className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 transition-colors px-3 py-1.5 rounded-lg border border-slate-700/50 hover:border-slate-600/60 hover:bg-slate-800/40"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+          </div>
+        </header>
+
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto px-7 py-6 space-y-5">
+
+          {/* Whale alerts */}
+          <WhaleBanner
+            alerts={activeAlerts}
+            onDismiss={(i) => setDismissed(prev => new Set([...prev, i]))}
+          />
+
+          {/* Trading Signal */}
+          <SignalCard signal={signal} coin={coin} />
+
+          {/* Stats row */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <StatCard
+              title="Average Price"
+              value={fmtPrice(summary?.avgPrice, coin.id)}
+              helper="10-second rolling average from live trades"
+              tooltip="This is the average price of all trades in the last 10-second window. It refreshes every 5 seconds."
+              trend={priceTrend}
+              coin={coin}
+              delay="stagger-1"
+            />
+            <StatCard
+              title="Trade Updates"
+              value={summary?.totalUpdates?.toLocaleString() ?? '0'}
+              helper="Number of trade events in the last window"
+              tooltip="Each 'update' is one price tick received from the Coinbase exchange. More updates = more market activity."
+              coin={coin}
+              delay="stagger-2"
+            />
+            <StatCard
+              title="Last Refreshed"
+              value={summary?.timestamp ? fmtTime(summary.timestamp) : '—'}
+              helper="Time of the most recent price update"
+              tooltip="The timestamp of the latest data point received from the live stream."
+              coin={coin}
+              delay="stagger-3"
+            />
+          </div>
+
+          {/* Indicator row: RSI + EMA */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <RSIGauge rsi={latestRsi} coin={coin} />
+            <EMACard latestRecord={latestRecord} coin={coin} />
+          </div>
+
+          {/* Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <PriceChart
+              data={recentData}
+              title="Price Trend"
+              color={coin.color}
+              coinId={coin.id}
+            />
+            <CountChart
+              data={hourlyData}
+              title="Market Activity"
+              color={coin.color}
+            />
+          </div>
+
+          {/* Live updates table */}
+          <UpdatesTable
+            data={recentData.slice().reverse().slice(0, 10)}
+            title="Recent Updates"
+            coin={coin}
+          />
+
         </div>
-
-        {/* Indicator Row: RSI Gauge + EMA Badge */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <RSIGauge rsi={latestRsi} coin={coin}/>
-          <EMABadge latestRecord={latestRecord} coin={coin}/>
-        </div>
-
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <PriceChart data={recentData} title={`${coin.name} Price + EMA-14 · Real-Time (10s)`} color={coin.color} coinId={coin.id}/>
-          <CountChart data={hourlyData} title={`${coin.name} Update Frequency · Last Hour (5-min)`} color={coin.color}/>
-        </div>
-
-        {/* Table */}
-        <UpdatesTable data={recentData.slice().reverse().slice(0, 10)} title={`Latest ${coin.name} Updates`} coin={coin}/>
-      </main>
+      </div>
     </div>
   );
 };
