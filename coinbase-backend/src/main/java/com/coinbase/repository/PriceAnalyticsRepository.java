@@ -9,17 +9,17 @@ import java.util.List;
 
 @Repository
 public interface PriceAnalyticsRepository extends MongoRepository<PriceAnalytics, String> {
-    
-    // Find by symbol, ordered by timestamp descending
+
     List<PriceAnalytics> findBySymbolOrderByTimestampDesc(String symbol, Pageable pageable);
-    
-    // Find the latest record by symbol
+
     PriceAnalytics findFirstBySymbolOrderByTimestampDesc(String symbol);
-    
-    // Find all ordered by timestamp descending
+
     List<PriceAnalytics> findAllByOrderByTimestampDesc(Pageable pageable);
-    
-    // Find recent records by symbol (no time filter, just get recent)
+
     @Query("{ 'symbol': ?0 }")
     List<PriceAnalytics> findRecentBySymbol(String symbol);
+
+    // For historical range queries — filter by symbol AND timestamp_ms range
+    @Query("{ 'symbol': ?0, 'timestamp_ms': { $gte: ?1, $lte: ?2 } }")
+    List<PriceAnalytics> findBySymbolAndTimestampMsBetween(String symbol, long start, long end);
 }
