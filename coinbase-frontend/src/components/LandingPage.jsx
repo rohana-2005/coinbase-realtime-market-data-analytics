@@ -7,7 +7,7 @@ const LandingPage = ({ onGetStarted }) => {
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white relative overflow-hidden">
       {/* Animated gradient orbs */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-green-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -top-10 -right-40 w-80 h-80 bg-green-500/20 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute top-1/2 -left-40 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
         <div className="absolute -bottom-40 right-1/4 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-pulse delay-2000"></div>
       </div>
@@ -23,11 +23,11 @@ const LandingPage = ({ onGetStarted }) => {
       <nav className="relative z-10 w-full px-8 lg:px-16 xl:px-24 py-5 backdrop-blur-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 group cursor-pointer">
-            <div className="text-3xl transform group-hover:scale-110 transition-transform">🪙</div>
-            <span className="text-xl font-bold bg-gradient-to-r from-white to-emerald-400 bg-clip-text text-transparent">
+            <div className="text-2xl transform group-hover:scale-110 transition-transform">🪙</div>
+            <span className="text-base font-bold bg-gradient-to-r from-white to-emerald-400 bg-clip-text text-transparent">
               Crypto Market Dashboard
             </span>
-            <span className="px-3 py-1 text-xs bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-full shadow-lg shadow-emerald-500/50 animate-pulse">
+            <span className="px-2 py-0.5 text-[10px] bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-full shadow-lg shadow-emerald-500/50 animate-pulse">
               Live
             </span>
           </div>
@@ -73,7 +73,7 @@ const LandingPage = ({ onGetStarted }) => {
               <span className="text-sm text-emerald-400 font-medium">Real-Time Market Intelligence</span>
             </div>
             
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
               <span className="bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
                 Real-Time Crypto
               </span>
@@ -83,7 +83,7 @@ const LandingPage = ({ onGetStarted }) => {
               </span>
             </h1>
             
-            <p className="text-lg md:text-xl text-slate-300 leading-relaxed">
+            <p className="text-sm md:text-base text-slate-300 leading-relaxed">
               Stay updated with live Bitcoin price data and market statistics. 
               Monitor trends, analyze patterns, and make informed decisions in real-time.
             </p>
@@ -107,16 +107,16 @@ const LandingPage = ({ onGetStarted }) => {
             {/* Stats */}
             <div className="flex gap-8 pt-6 border-t border-slate-800">
               <div>
-                <div className="text-3xl font-bold text-emerald-400">10s</div>
-                <div className="text-sm text-slate-400">Update Interval</div>
+                <div className="text-xl font-bold text-emerald-400">10s</div>
+                <div className="text-xs text-slate-400">Update Interval</div>
               </div>
               <div>
-                <div className="text-3xl font-bold text-emerald-400">24/7</div>
-                <div className="text-sm text-slate-400">Live Monitoring</div>
+                <div className="text-xl font-bold text-emerald-400">24/7</div>
+                <div className="text-xs text-slate-400">Live Monitoring</div>
               </div>
               <div>
-                <div className="text-3xl font-bold text-emerald-400">Real-Time</div>
-                <div className="text-sm text-slate-400">Market Data</div>
+                <div className="text-xl font-bold text-emerald-400">Real-Time</div>
+                <div className="text-xs text-slate-400">Market Data</div>
               </div>
             </div>
           </div>
@@ -150,10 +150,10 @@ const LandingPage = ({ onGetStarted }) => {
       <div className="relative z-10 w-full px-8 lg:px-16 xl:px-24 pb-16 text-center">
         <button 
           onClick={onGetStarted}
-          className="group px-10 py-4 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-bold text-lg hover:shadow-2xl hover:shadow-emerald-500/50 hover:scale-110 transition-all duration-300 flex items-center gap-3 mx-auto"
+          className="group px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-bold text-base hover:shadow-2xl hover:shadow-emerald-500/50 hover:scale-110 transition-all duration-300 flex items-center gap-3 mx-auto"
         >
           <span>Get Started Now</span>
-          <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+          <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
         </button>
       </div>
 
@@ -161,40 +161,40 @@ const LandingPage = ({ onGetStarted }) => {
       <div className="relative z-10 w-full px-8 lg:px-16 xl:px-24 pb-20">
         <div className="grid md:grid-cols-3 gap-6">
           {/* Feature 1 */}
-          <div className="group bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-2xl p-8 border border-slate-700/50 text-center hover:border-emerald-500/50 hover:shadow-2xl hover:shadow-emerald-500/20 transition-all duration-500 hover:-translate-y-2">
-            <div className="w-20 h-20 bg-gradient-to-br from-emerald-500/20 to-green-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg shadow-emerald-500/20">
-              <Zap className="w-10 h-10 text-emerald-400 group-hover:animate-pulse" />
+          <div className="group bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-2xl p-5 border border-slate-700/50 text-center hover:border-emerald-500/50 hover:shadow-2xl hover:shadow-emerald-500/20 transition-all duration-500 hover:-translate-y-2">
+            <div className="w-14 h-14 bg-gradient-to-br from-emerald-500/20 to-green-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg shadow-emerald-500/20">
+              <Zap className="w-7 h-7 text-emerald-400 group-hover:animate-pulse" />
             </div>
-            <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-white to-emerald-400 bg-clip-text text-transparent">
+            <h3 className="text-lg font-bold mb-2 bg-gradient-to-r from-white to-emerald-400 bg-clip-text text-transparent">
               Live BTC Price <span className="text-emerald-400">Updates</span>
             </h3>
-            <p className="text-slate-400 leading-relaxed text-base">
+            <p className="text-slate-400 leading-relaxed text-sm">
               Receive live Bitcoin price updates every 10 seconds with real-time market data streaming.
             </p>
           </div>
 
           {/* Feature 2 */}
-          <div className="group bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-2xl p-8 border border-slate-700/50 text-center hover:border-teal-500/50 hover:shadow-2xl hover:shadow-teal-500/20 transition-all duration-500 hover:-translate-y-2">
-            <div className="w-20 h-20 bg-gradient-to-br from-teal-500/20 to-cyan-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg shadow-teal-500/20">
-              <TrendingUp className="w-10 h-10 text-teal-400 group-hover:animate-pulse" />
+          <div className="group bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-2xl p-5 border border-slate-700/50 text-center hover:border-teal-500/50 hover:shadow-2xl hover:shadow-teal-500/20 transition-all duration-500 hover:-translate-y-2">
+            <div className="w-14 h-14 bg-gradient-to-br from-teal-500/20 to-cyan-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg shadow-teal-500/20">
+              <TrendingUp className="w-7 h-7 text-teal-400 group-hover:animate-pulse" />
             </div>
-            <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-white to-teal-400 bg-clip-text text-transparent">
+            <h3 className="text-lg font-bold mb-2 bg-gradient-to-r from-white to-teal-400 bg-clip-text text-transparent">
               Detailed Market <span className="text-teal-400">Analytics</span>
             </h3>
-            <p className="text-slate-400 leading-relaxed text-base">
+            <p className="text-slate-400 leading-relaxed text-sm">
               Track price trends, volume, and market movements with comprehensive analytics tools.
             </p>
           </div>
 
           {/* Feature 3 */}
-          <div className="group bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-2xl p-8 border border-slate-700/50 text-center hover:border-cyan-500/50 hover:shadow-2xl hover:shadow-cyan-500/20 transition-all duration-500 hover:-translate-y-2">
-            <div className="w-20 h-20 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg shadow-cyan-500/20">
-              <Bell className="w-10 h-10 text-cyan-400 group-hover:animate-pulse" />
+          <div className="group bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-2xl p-5 border border-slate-700/50 text-center hover:border-cyan-500/50 hover:shadow-2xl hover:shadow-cyan-500/20 transition-all duration-500 hover:-translate-y-2">
+            <div className="w-14 h-14 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg shadow-cyan-500/20">
+              <Bell className="w-7 h-7 text-cyan-400 group-hover:animate-pulse" />
             </div>
-            <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-white to-cyan-400 bg-clip-text text-transparent">
+            <h3 className="text-lg font-bold mb-2 bg-gradient-to-r from-white to-cyan-400 bg-clip-text text-transparent">
               Real-Time <span className="text-cyan-400">Alerts</span>
             </h3>
-            <p className="text-slate-400 leading-relaxed text-base">
+            <p className="text-slate-400 leading-relaxed text-sm">
               Get notified about significant market changes instantly with smart alerts system.
             </p>
           </div>
@@ -209,13 +209,13 @@ const LandingPage = ({ onGetStarted }) => {
             <span className="text-sm text-slate-300 font-medium">Comprehensive Analytics Platform</span>
           </div>
           
-          <h2 className="text-4xl md:text-5xl font-bold">
+          <h2 className="text-2xl md:text-3xl font-bold">
             <span className="bg-gradient-to-r from-white via-emerald-400 to-teal-400 bg-clip-text text-transparent">
               Crypto Market Dashboard
             </span>
           </h2>
           
-          <p className="text-lg text-slate-300 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-sm text-slate-300 max-w-3xl mx-auto leading-relaxed">
             Our Crypto Market Dashboard provides real-time data and insights to help you stay ahead 
             in the cryptocurrency market. Monitor Bitcoin prices, track market trends, and receive instant alerts.
           </p>
