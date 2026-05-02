@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   LayoutDashboard, BarChart2, RefreshCw,
   TrendingUp, TrendingDown, Minus, X, ChevronRight, Activity, History,
+  Zap, Target, ArrowUpRight, ArrowDownRight,
 } from 'lucide-react';
 import { analyticsAPI } from '../services/api';
 import StatCard from '../components/StatCard';
@@ -163,6 +164,178 @@ const EMACard = ({ latestRecord, coin }) => {
   );
 };
 
+// ── Key Insights Panel ────────────────────────────────────────────────────────
+const KeyInsightsPanel = ({ highPrice, lowPrice, pctChange, volatility, coin }) => {
+  const dec = coin.id === 'DOGE-USD' ? 4 : 2;
+  const fmtP = (v) =>
+    v != null ? `$${v.toLocaleString(undefined, { minimumFractionDigits: dec, maximumFractionDigits: dec })}` : '—';
+
+  const volCfg =
+    volatility === 'High'
+      ? { color: 'text-rose-400',    border: 'border-rose-500/25',    bgFrom: 'from-rose-500/8',    iconBg: 'bg-rose-500/15 border-rose-500/25',    dot: 'bg-rose-400',    tip: 'Price is swinging a lot — expect big moves' }
+      : volatility === 'Medium'
+      ? { color: 'text-amber-400',   border: 'border-amber-500/25',   bgFrom: 'from-amber-500/8',   iconBg: 'bg-amber-500/15 border-amber-500/25',   dot: 'bg-amber-400',   tip: 'Moderate price movement — watch closely' }
+      : { color: 'text-emerald-400', border: 'border-emerald-500/25', bgFrom: 'from-emerald-500/8', iconBg: 'bg-emerald-500/15 border-emerald-500/25', dot: 'bg-emerald-400', tip: 'Price is relatively stable right now' };
+
+  const pctPos = pctChange != null && pctChange > 0;
+  const pctNeg = pctChange != null && pctChange < 0;
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-fade-in">
+
+      {/* Highest Price */}
+      <div className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/8 to-transparent backdrop-blur-sm p-4 hover:border-emerald-500/35 hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-300 group">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-7 h-7 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center">
+            <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+          </div>
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Highest</span>
+        </div>
+        <div className="text-[22px] font-bold text-white tabular-nums leading-none mb-1.5">{fmtP(highPrice)}</div>
+        <p className="text-[10px] text-slate-500 leading-snug">Peak price in this session</p>
+      </div>
+
+      {/* Lowest Price */}
+      <div className="rounded-2xl border border-rose-500/20 bg-gradient-to-br from-rose-500/8 to-transparent backdrop-blur-sm p-4 hover:border-rose-500/35 hover:shadow-lg hover:shadow-rose-500/5 transition-all duration-300 group">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-7 h-7 rounded-xl bg-rose-500/15 border border-rose-500/25 flex items-center justify-center">
+            <TrendingDown className="w-3.5 h-3.5 text-rose-400" />
+          </div>
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Lowest</span>
+        </div>
+        <div className="text-[22px] font-bold text-white tabular-nums leading-none mb-1.5">{fmtP(lowPrice)}</div>
+        <p className="text-[10px] text-slate-500 leading-snug">Floor price in this session</p>
+      </div>
+
+      {/* % Change */}
+      <div className={`rounded-2xl border bg-gradient-to-br to-transparent backdrop-blur-sm p-4 transition-all duration-300 hover:shadow-lg ${
+        pctPos ? 'border-emerald-500/20 from-emerald-500/6 hover:border-emerald-500/35 hover:shadow-emerald-500/5'
+        : pctNeg ? 'border-rose-500/20 from-rose-500/6 hover:border-rose-500/35 hover:shadow-rose-500/5'
+        : 'border-slate-700/50 from-slate-800/20 hover:border-slate-600/50'
+      }`}>
+        <div className="flex items-center gap-2 mb-3">
+          <div className={`w-7 h-7 rounded-xl flex items-center justify-center border ${
+            pctPos ? 'bg-emerald-500/15 border-emerald-500/25'
+            : pctNeg ? 'bg-rose-500/15 border-rose-500/25'
+            : 'bg-slate-700/40 border-slate-600/40'
+          }`}>
+            {pctPos
+              ? <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400" />
+              : pctNeg
+              ? <ArrowDownRight className="w-3.5 h-3.5 text-rose-400" />
+              : <Minus className="w-3.5 h-3.5 text-slate-500" />}
+          </div>
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">% Change</span>
+        </div>
+        <div className={`text-[22px] font-bold tabular-nums leading-none mb-1.5 ${
+          pctPos ? 'text-emerald-400' : pctNeg ? 'text-rose-400' : 'text-slate-400'
+        }`}>
+          {pctChange != null ? `${pctPos ? '+' : ''}${pctChange.toFixed(3)}%` : '—'}
+        </div>
+        <p className="text-[10px] text-slate-500 leading-snug">Price shift since window start</p>
+      </div>
+
+      {/* Volatility */}
+      <div className={`rounded-2xl border bg-gradient-to-br ${volCfg.bgFrom} to-transparent backdrop-blur-sm p-4 hover:shadow-lg transition-all duration-300 ${volCfg.border}`}>
+        <div className="flex items-center gap-2 mb-3">
+          <div className={`w-7 h-7 rounded-xl flex items-center justify-center border ${volCfg.iconBg}`}>
+            <Zap className={`w-3.5 h-3.5 ${volCfg.color}`} />
+          </div>
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Volatility</span>
+        </div>
+        <div className={`text-[22px] font-bold leading-none mb-1.5 ${volCfg.color}`}>{volatility ?? '—'}</div>
+        <p className="text-[10px] text-slate-500 leading-snug">{volCfg.tip}</p>
+      </div>
+
+    </div>
+  );
+};
+
+// ── Market Summary Card ───────────────────────────────────────────────────────
+const MarketSummaryCard = ({ trendDir, strength, volatility, coin }) => {
+  const isBull = trendDir === 'Uptrend';
+  const isBear = trendDir === 'Downtrend';
+
+  const trendCfg = isBull
+    ? { icon: <TrendingUp className="w-4 h-4" />,  color: 'text-emerald-400', sub: 'Price going up' }
+    : isBear
+    ? { icon: <TrendingDown className="w-4 h-4" />, color: 'text-rose-400',    sub: 'Price going down' }
+    : { icon: <Minus className="w-4 h-4" />,        color: 'text-amber-400',   sub: 'No clear direction' };
+
+  const strengthCfg =
+    strength === 'Strong'   ? { color: 'text-emerald-400', sub: 'Clear, decisive movement' }
+    : strength === 'Moderate' ? { color: 'text-amber-400',   sub: 'Momentum building up' }
+    :                           { color: 'text-slate-400',   sub: 'Market is undecided' };
+
+  const volColor =
+    volatility === 'High'   ? 'text-rose-400'
+    : volatility === 'Medium' ? 'text-amber-400'
+    :                           'text-emerald-400';
+  const volSub =
+    volatility === 'High'   ? 'Big price swings — be careful'
+    : volatility === 'Medium' ? 'Moderate swings — watch closely'
+    :                           'Stable market — low risk';
+
+  const reading =
+    isBull && strength === 'Strong'   ? 'Price is climbing strongly. Buyers are in control right now.'
+    : isBull                          ? 'Price is gradually moving up. Watch for confirmation.'
+    : isBear && strength === 'Strong' ? 'Price is dropping fast. Sellers are dominant.'
+    : isBear                          ? 'Price is drifting lower. Monitor for a reversal.'
+    : volatility === 'High'           ? 'Price is choppy with no clear direction. Stay cautious.'
+    :                                   'Price is stable. No strong trend either way.';
+
+  return (
+    <div className="rounded-2xl border border-slate-700/50 bg-slate-800/30 backdrop-blur-sm overflow-hidden animate-fade-in hover:border-slate-600/50 transition-all duration-300" style={{ borderLeft: `2px solid ${coin.color}40` }}>
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-700/40">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-xl bg-slate-700/60 border border-slate-600/40 flex items-center justify-center">
+            <Target className="w-3.5 h-3.5 text-slate-400" />
+          </div>
+          <span className="text-sm font-semibold text-slate-200">Market Summary</span>
+          <InfoTooltip text="A plain-English breakdown of current market conditions based on recent price data. Not financial advice." />
+        </div>
+        <span className="text-[10px] text-slate-500 font-medium hidden sm:block">Based on recent price movement &amp; averages</span>
+      </div>
+
+      {/* Content */}
+      <div className="flex flex-col sm:flex-row items-stretch divide-y sm:divide-y-0 sm:divide-x divide-slate-700/40">
+
+        {/* Trend */}
+        <div className="flex-1 px-5 py-4">
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-2">Trend Direction</div>
+          <div className={`flex items-center gap-1.5 text-lg font-bold ${trendCfg.color} mb-1`}>
+            {trendCfg.icon} {isBull ? 'Uptrend' : isBear ? 'Downtrend' : 'Sideways'}
+          </div>
+          <p className="text-[10px] text-slate-500">{trendCfg.sub}</p>
+        </div>
+
+        {/* Strength */}
+        <div className="flex-1 px-5 py-4">
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-2">Trend Strength</div>
+          <div className={`text-lg font-bold mb-1 ${strengthCfg.color}`}>{strength}</div>
+          <p className="text-[10px] text-slate-500">{strengthCfg.sub}</p>
+        </div>
+
+        {/* Volatility */}
+        <div className="flex-1 px-5 py-4">
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-2">Market Feel</div>
+          <div className={`text-lg font-bold mb-1 ${volColor}`}>{volatility} Vol</div>
+          <p className="text-[10px] text-slate-500">{volSub}</p>
+        </div>
+
+        {/* Plain reading */}
+        <div className="px-5 py-4" style={{ flex: 2 }}>
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-2">What This Means</div>
+          <p className="text-sm text-slate-300 font-medium leading-snug">{reading}</p>
+          <p className="text-[10px] text-slate-600 mt-1.5">Not financial advice · updated every 5 seconds</p>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
 // ── Main Dashboard ────────────────────────────────────────────────────────────
 const Dashboard = () => {
   const [selectedCoinId, setSelectedCoinId] = useState('BTC-USD');
@@ -231,6 +404,19 @@ const Dashboard = () => {
     ? ((recentData[recentData.length - 1]?.avgPrice - recentData[0]?.avgPrice) / recentData[0]?.avgPrice) * 100
     : null;
   const activeAlerts = whaleAlerts.filter((_, i) => !dismissed.has(i));
+
+  // ── Derived insight values (computed from existing recentData) ────────────
+  const priceArr  = recentData.filter(d => d?.avgPrice > 0).map(d => d.avgPrice);
+  const highPrice = priceArr.length ? Math.max(...priceArr) : null;
+  const lowPrice  = priceArr.length ? Math.min(...priceArr) : null;
+  const meanPrice = priceArr.length ? priceArr.reduce((a, b) => a + b, 0) / priceArr.length : null;
+  const stdDev    = meanPrice && priceArr.length > 1
+    ? Math.sqrt(priceArr.reduce((sum, p) => sum + Math.pow(p - meanPrice, 2), 0) / priceArr.length)
+    : 0;
+  const volPct    = meanPrice ? (stdDev / meanPrice) * 100 : 0;
+  const volatility = volPct > 0.15 ? 'High' : volPct > 0.04 ? 'Medium' : 'Low';
+  const trendDir   = priceTrend == null ? 'Sideways' : priceTrend > 0.05 ? 'Uptrend' : priceTrend < -0.05 ? 'Downtrend' : 'Sideways';
+  const strength   = priceTrend == null ? 'Weak' : Math.abs(priceTrend) < 0.1 ? 'Weak' : Math.abs(priceTrend) < 0.3 ? 'Moderate' : 'Strong';
 
   if (loading && !summary) {
     return (
@@ -378,54 +564,48 @@ const Dashboard = () => {
           {/* ── Live Dashboard view ── */}
           {activeNav !== 'history' && (
             <>
+              {/* Whale Alert */}
               <WhaleBanner
                 alerts={activeAlerts}
                 onDismiss={(i) => setDismissed(prev => new Set([...prev, i]))}
               />
 
+              {/* Signal Card — hero */}
               <SignalCard signal={signal} coin={coin} />
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <StatCard
-                  title="Average Price"
-                  value={fmtPrice(summary?.avgPrice, coin.id)}
-                  helper="10-second rolling average from live trades"
-                  tooltip="This is the average price of all trades in the last 10-second window. It refreshes every 5 seconds."
-                  trend={priceTrend}
-                  coin={coin}
-                  delay="stagger-1"
-                />
-                <StatCard
-                  title="Trade Updates"
-                  value={summary?.totalUpdates?.toLocaleString() ?? '0'}
-                  helper="Number of trade events in the last window"
-                  tooltip="Each 'update' is one price tick received from the Coinbase exchange. More updates = more market activity."
-                  coin={coin}
-                  delay="stagger-2"
-                />
-                <StatCard
-                  title="Last Refreshed"
-                  value={summary?.timestamp ? fmtTime(summary.timestamp) : '—'}
-                  helper="Time of the most recent price update"
-                  tooltip="The timestamp of the latest data point received from the live stream."
-                  coin={coin}
-                  delay="stagger-3"
-                />
-              </div>
+              {/* Key Insights Panel — replaces raw StatCards */}
+              <KeyInsightsPanel
+                highPrice={highPrice}
+                lowPrice={lowPrice}
+                pctChange={priceTrend}
+                volatility={volatility}
+                coin={coin}
+              />
 
+              {/* RSI + EMA */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <RSIGauge rsi={latestRsi} coin={coin} />
                 <EMACard latestRecord={latestRecord} coin={coin} />
               </div>
 
+              {/* Price Trend + Trading Activity */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 <PriceChart data={recentData} title="Price Trend" color={coin.color} coinId={coin.id} />
-                <CountChart data={hourlyData} title="Market Activity" color={coin.color} />
+                <CountChart data={hourlyData} title="Trading Activity" color={coin.color} />
               </div>
 
+              {/* Market Summary Card */}
+              <MarketSummaryCard
+                trendDir={trendDir}
+                strength={strength}
+                volatility={volatility}
+                coin={coin}
+              />
+
+              {/* Last 5 Price Ticks — compact */}
               <UpdatesTable
-                data={recentData.slice().reverse().slice(0, 10)}
-                title="Recent Updates"
+                data={recentData.slice().reverse().slice(0, 5)}
+                title="Last 5 Price Ticks"
                 coin={coin}
               />
             </>

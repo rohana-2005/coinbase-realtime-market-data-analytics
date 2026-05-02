@@ -22,9 +22,12 @@ const UpdatesTable = ({ data, title, coin }) => {
     <div className="rounded-2xl border border-slate-700/50 bg-slate-800/30 backdrop-blur-sm overflow-hidden hover:border-slate-600/50 transition-all duration-300 animate-fade-in stagger-4">
       {/* Table header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700/40">
-        <div className="flex items-center">
-          <h3 className="text-sm font-semibold text-slate-200">{title}</h3>
-          <InfoTooltip text="The 10 most recent 10-second price snapshots. Change shows if the price went up or down compared to the previous window." />
+        <div>
+          <div className="flex items-center">
+            <h3 className="text-sm font-semibold text-slate-200">{title}</h3>
+            <InfoTooltip text="The most recent 10-second price snapshots from the live stream. Change shows if the price went up or down compared to the previous window." />
+          </div>
+          <p className="text-[11px] text-slate-500 mt-0.5">Most recent price snapshots · updates every 10 seconds</p>
         </div>
         <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
           <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: color }} />
