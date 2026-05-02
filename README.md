@@ -11,11 +11,13 @@ A real-time cryptocurrency analytics platform with microservices architecture, p
 
 ## ✨ Features
 
-- 📊 **Real-Time Analytics** - Live BTC-USD price tracking with 10-second aggregation windows
+- 📊 **Real-Time Analytics** - Live multi-asset tracking (BTC, ETH, SOL, DOGE) with 10-second aggregation windows
+- 🧠 **Advanced Indicators** - Real-time computation of EMA, RSI, and Whale activity metrics
+- 📅 **Historical Analysis** - Range-based statistics and custom datepicker for historical trends
 - 🔄 **Stream Processing** - Apache Flink for continuous data processing
-- 📈 **Interactive Charts** - Visual representation of price trends and update frequency
+- 📈 **Interactive Charts** - Visual representation of price trends, update frequency, and historical data
 - ⚡ **Live Updates** - Auto-refreshing dashboard every 5 seconds
-- 🎨 **Modern UI** - Responsive design with dark theme using Tailwind CSS
+- 🎨 **Modern UI** - Responsive design with dark theme using Tailwind CSS, featuring InfoTooltips and refined layouts
 - 🏗️ **Scalable Architecture** - Microservices-based distributed system.
 
 ## 🏗️ Architecture
@@ -57,7 +59,7 @@ graph TB
         GH[GitHub Repository<br/>rohana-2005/coinbase-realtime-analytics]
     end
 
-    CB -->|Live Market Data<br/>BTC-USD Ticker| BE
+    CB -->|Live Market Data<br/>Multi-Asset Tickers| BE
     BE -->|Produce Messages| KF
     KF -.->|Coordination| ZK
     KF -->|Consume Stream| FTM
@@ -95,7 +97,7 @@ sequenceDiagram
     participant DB as MongoDB
     participant FE as React Frontend
 
-    CB->>BE: Stream BTC-USD Ticker<br/>(price, volume, high, low)
+    CB->>BE: Stream Multi-Asset Tickers<br/>(price, volume, high, low)
     BE->>KF: Publish to Topic<br/>coinbase-market-data
     BE->>DB: Save Raw Ticker<br/>(PriceAnalytics)
     
@@ -188,7 +190,7 @@ graph LR
 | **CI/CD** | GitHub Actions | Automated testing and builds |
 
 ### Key Features
-1. **WebSocket Client** connects to Coinbase Pro and subscribes to BTC-USD ticker
+1. **WebSocket Client** connects to Coinbase Pro and subscribes to BTC-USD, ETH-USD, SOL-USD, DOGE-USD tickers
 2. **Kafka Producer** publishes real-time price updates to message queue
 3. **Flink Job** processes stream data using 10-second tumbling windows
 4. **MongoDB** stores aggregated analytics (avg price, count, timestamp)
@@ -298,7 +300,7 @@ Backend API: **http://localhost:8080**
 
 The backend will automatically:
 - Connect to Coinbase WebSocket
-- Subscribe to BTC-USD ticker
+- Subscribe to BTC-USD, ETH-USD, SOL-USD, DOGE-USD tickers
 - Stream data to Kafka topic: `coinbase-market-data`
 
 ### 3️⃣ Start Flink Processing Job
@@ -336,7 +338,7 @@ Dashboard: **http://localhost:5173**
 ![Dashboard Overview](images/dashboard1.png)
 
 **Displays:**
-- Average BTC-USD price
+- Average multi-asset prices
 - Total updates in 10-second window
 - Last update timestamp
 - Price trend chart
@@ -361,6 +363,10 @@ Dashboard: **http://localhost:5173**
 | `/api/analytics/summary` | GET | Latest aggregated stats | Current avg price, count, timestamp |
 | `/api/analytics/recent` | GET | Recent records | `?symbol=BTC-USD&limit=30` |
 | `/api/analytics/latest` | GET | Most recent analytics | Latest window data |
+| `/api/analytics/hourly` | GET | Hourly stats for chart | `?symbol=BTC-USD&hours=24` |
+| `/api/analytics/historical` | GET | Auto-bucketed chart data | `?symbol=BTC-USD&start=1672531200000&end=1672617600000` |
+| `/api/analytics/range-summary`| GET | Range summary (OHLC) | `?symbol=BTC-USD&start=1672531200000&end=1672617600000` |
+| `/api/analytics/signal` | GET | Trading signal | `?symbol=BTC-USD` |
 | `/api/analytics/health` | GET | Health check | Service status |
 
 ### Example API Response
@@ -381,7 +387,7 @@ Dashboard: **http://localhost:5173**
 Displays key metrics in card format with title, value, and subtitle.
 
 ### PriceChart (Line Chart)
-Visualizes BTC-USD average price over time using Recharts LineChart.
+Visualizes average asset price over time using Recharts LineChart.
 
 ### CountChart (Bar Chart)
 Shows price update frequency/volume using Recharts BarChart.
@@ -427,7 +433,7 @@ const API_BASE_URL = 'http://localhost:8080/api';
 ```java
 // Connects to Coinbase Pro WebSocket
 URI coinbaseUri = new URI("wss://ws-feed.exchange.coinbase.com");
-// Subscribes to ticker channel for BTC-USD
+// Subscribes to ticker channels for BTC-USD, ETH-USD, SOL-USD, DOGE-USD
 ```
 
 ### 2. Kafka Message Format
@@ -441,7 +447,7 @@ URI coinbaseUri = new URI("wss://ws-feed.exchange.coinbase.com");
 ```
 
 ### 3. Flink Processing
-- Groups by symbol (BTC-USD)
+- Groups by symbol (e.g., BTC-USD, ETH-USD)
 - Tumbling window of 10 seconds
 - Calculates average price and count
 - Outputs to MongoDB sink
@@ -453,6 +459,10 @@ URI coinbaseUri = new URI("wss://ws-feed.exchange.coinbase.com");
   "symbol": "BTC-USD",
   "avgPrice": 90046.15,
   "count": 13978,
+  "ema": 90050.25,
+  "rsi": 45.5,
+  "whaleAlert": false,
+  "whaleReason": null,
   "timestamp": 1735902900000,
   "formattedTime": "2026-01-03T10:15:00Z"
 }
