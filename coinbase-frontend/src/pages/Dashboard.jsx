@@ -12,6 +12,7 @@ import UpdatesTable from '../components/UpdatesTable';
 import RSIGauge from '../components/RSIGauge';
 import InfoTooltip from '../components/InfoTooltip';
 import HistoricalChart from './HistoricalChart';
+import MarketCopilot from '../components/MarketCopilot';
 
 // ── Coin registry ─────────────────────────────────────────────────────────────
 const COINS = [
@@ -391,7 +392,7 @@ const Dashboard = () => {
     setLoading(true);
     setSummary(null); setRecentData([]); setHourlyData([]); setSignal(null);
     fetchData(selectedCoinId);
-  }, [selectedCoinId]);
+  }, [selectedCoinId, fetchData]);
 
   useEffect(() => {
     const id = setInterval(() => fetchData(selectedCoinId), 5000);
@@ -490,7 +491,9 @@ const Dashboard = () => {
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 ${
                     active ? 'bg-slate-800/60 text-white border border-slate-700/50' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'
                   }`}>
-                  <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-slate-300' : 'text-slate-600'}`} />
+                  {React.createElement(Icon, {
+                    className: `w-4 h-4 shrink-0 ${active ? 'text-slate-300' : 'text-slate-600'}`,
+                  })}
                   <span className="font-medium">{label}</span>
                   {id === 'history' && (
                     <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded-md bg-slate-700/60 text-slate-500 font-semibold uppercase tracking-wider">New</span>
@@ -613,6 +616,7 @@ const Dashboard = () => {
 
         </div>
       </div>
+      <MarketCopilot coin={coin} />
     </div>
   );
 };

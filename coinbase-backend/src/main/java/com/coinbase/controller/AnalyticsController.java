@@ -231,10 +231,6 @@ public class AnalyticsController {
         ));
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Historical chart data — auto-selects bucket size based on range duration
-    // GET /api/analytics/historical?symbol=BTC-USD&start=<epochMs>&end=<epochMs>
-    // ─────────────────────────────────────────────────────────────────────────
     @GetMapping("/historical")
     public ResponseEntity<List<Map<String, Object>>> getHistorical(
             @RequestParam(defaultValue = "BTC-USD") String symbol,
@@ -242,68 +238,59 @@ public class AnalyticsController {
             @RequestParam long end) {
 
         List<PriceAnalytics> raw = repository.findBySymbolAndTimestampMsBetween(symbol, start, end);
-
         if (raw.isEmpty()) {
             return ResponseEntity.ok(new ArrayList<>());
         }
 
-        // Sort ascending
         raw.sort(Comparator.comparingLong(PriceAnalytics::getTimestampMillis));
 
-        // Choose bucket size based on range length
-        long rangeMs  = end - start;
-        long oneHour  = 3_600_000L;
-        long oneDay   = 86_400_000L;
-        long oneWeek  = 7 * oneDay;
+        long rangeMs = end - start;
+        long oneHour = 3_600_000L;
+        long oneDay = 86_400_000L;
+        long oneWeek = 7 * oneDay;
         long oneMonth = 30L * oneDay;
 
         long bucketMs;
-        if      (rangeMs <= oneHour)   bucketMs = 60_000L;         // 1-min buckets for ≤1H
-        else if (rangeMs <= oneDay)    bucketMs = 15 * 60_000L;    // 15-min for ≤1D
-        else if (rangeMs <= oneWeek)   bucketMs = 60 * 60_000L;    // 1-hr  for ≤7D
-        else if (rangeMs <= oneMonth)  bucketMs = 4 * 60 * 60_000L;// 4-hr  for ≤1M
-        else                           bucketMs = 24 * 60 * 60_000L;// 1-day for >1M
+        if (rangeMs <= oneHour) bucketMs = 60_000L;
+        else if (rangeMs <= oneDay) bucketMs = 15 * 60_000L;
+        else if (rangeMs <= oneWeek) bucketMs = 60 * 60_000L;
+        else if (rangeMs <= oneMonth) bucketMs = 4 * 60 * 60_000L;
+        else bucketMs = 24 * 60 * 60_000L;
 
-        // Group records into time buckets
         Map<Long, List<PriceAnalytics>> buckets = new LinkedHashMap<>();
-        for (PriceAnalytics r : raw) {
-            long key = (r.getTimestampMillis() / bucketMs) * bucketMs;
-            buckets.computeIfAbsent(key, k -> new ArrayList<>()).add(r);
+        for (PriceAnalytics record : raw) {
+            long key = (record.getTimestampMillis() / bucketMs) * bucketMs;
+            buckets.computeIfAbsent(key, ignored -> new ArrayList<>()).add(record);
         }
 
         List<Map<String, Object>> result = new ArrayList<>();
         for (Map.Entry<Long, List<PriceAnalytics>> entry : buckets.entrySet()) {
             List<PriceAnalytics> group = entry.getValue();
-
             double avg = group.stream()
-                    .filter(p -> p.getAvgPrice() != null)
+                    .filter(item -> item.getAvgPrice() != null)
                     .mapToDouble(PriceAnalytics::getAvgPrice)
                     .average().orElse(0.0);
-
             double ema = group.stream()
-                    .filter(p -> p.getEma() != null)
+                    .filter(item -> item.getEma() != null)
                     .mapToDouble(PriceAnalytics::getEma)
                     .average().orElse(0.0);
-
             int count = group.stream()
-                    .mapToInt(p -> p.getCount() != null ? p.getCount() : 0).sum();
+                    .mapToInt(item -> item.getCount() != null ? item.getCount() : 0)
+                    .sum();
 
             Map<String, Object> point = new HashMap<>();
             point.put("timestamp", entry.getKey());
-            point.put("avgPrice",  Math.round(avg  * 100.0) / 100.0);
-            point.put("ema",       Math.round(ema  * 100.0) / 100.0);
-            point.put("count",     count);
+            point.put("avgPrice", Math.round(avg * 100.0) / 100.0);
+            point.put("ema", Math.round(ema * 100.0) / 100.0);
+            point.put("count", count);
             result.add(point);
         }
 
-        result.sort((a, b) -> Long.compare((Long) a.get("timestamp"), (Long) b.get("timestamp")));
+        result.sort((left, right) -> Long.compare(
+                (Long) left.get("timestamp"), (Long) right.get("timestamp")));
         return ResponseEntity.ok(result);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Range summary — OHLC + volume + volatility for any start→end window
-    // GET /api/analytics/range-summary?symbol=BTC-USD&start=<epochMs>&end=<epochMs>
-    // ─────────────────────────────────────────────────────────────────────────
     @GetMapping("/range-summary")
     public ResponseEntity<Map<String, Object>> getRangeSummary(
             @RequestParam(defaultValue = "BTC-USD") String symbol,
@@ -311,39 +298,41 @@ public class AnalyticsController {
             @RequestParam long end) {
 
         List<PriceAnalytics> raw = repository.findBySymbolAndTimestampMsBetween(symbol, start, end);
-
         if (raw.isEmpty()) {
             return ResponseEntity.ok(Map.of("message", "No data in selected range"));
         }
 
         raw.sort(Comparator.comparingLong(PriceAnalytics::getTimestampMillis));
-
         List<Double> prices = raw.stream()
-                .map(p -> p.getAvgPrice() != null ? p.getAvgPrice() : p.getPrice())
-                .filter(p -> p != null && p > 0)
+                .map(item -> item.getAvgPrice() != null ? item.getAvgPrice() : item.getPrice())
+                .filter(price -> price != null && price > 0)
                 .toList();
 
-        double open  = prices.get(0);
+        if (prices.isEmpty()) {
+            return ResponseEntity.ok(Map.of("message", "No price data in selected range"));
+        }
+
+        double open = prices.get(0);
         double close = prices.get(prices.size() - 1);
-        double high  = prices.stream().mapToDouble(d -> d).max().orElse(open);
-        double low   = prices.stream().mapToDouble(d -> d).min().orElse(open);
-        long   totalTrades = raw.stream().mapToLong(p -> p.getCount() != null ? p.getCount() : 0).sum();
-        double volatility  = high > 0 ? ((high - low) / high) * 100.0 : 0.0;
-        double change      = open > 0 ? ((close - open) / open) * 100.0 : 0.0;
+        double high = prices.stream().mapToDouble(Double::doubleValue).max().orElse(open);
+        double low = prices.stream().mapToDouble(Double::doubleValue).min().orElse(open);
+        long totalTrades = raw.stream()
+                .mapToLong(item -> item.getCount() != null ? item.getCount() : 0)
+                .sum();
+        double volatility = high > 0 ? ((high - low) / high) * 100.0 : 0.0;
+        double change = open > 0 ? ((close - open) / open) * 100.0 : 0.0;
 
         Map<String, Object> summary = new HashMap<>();
-        summary.put("open",        Math.round(open       * 100.0) / 100.0);
-        summary.put("close",       Math.round(close      * 100.0) / 100.0);
-        summary.put("high",        Math.round(high       * 100.0) / 100.0);
-        summary.put("low",         Math.round(low        * 100.0) / 100.0);
+        summary.put("open", Math.round(open * 100.0) / 100.0);
+        summary.put("close", Math.round(close * 100.0) / 100.0);
+        summary.put("high", Math.round(high * 100.0) / 100.0);
+        summary.put("low", Math.round(low * 100.0) / 100.0);
         summary.put("totalTrades", totalTrades);
-        summary.put("volatility",  Math.round(volatility * 100.0) / 100.0);
-        summary.put("change",      Math.round(change     * 100.0) / 100.0);
-        summary.put("dataPoints",  raw.size());
-        summary.put("start",       start);
-        summary.put("end",         end);
-
+        summary.put("volatility", Math.round(volatility * 100.0) / 100.0);
+        summary.put("change", Math.round(change * 100.0) / 100.0);
+        summary.put("dataPoints", raw.size());
+        summary.put("start", start);
+        summary.put("end", end);
         return ResponseEntity.ok(summary);
     }
 }
-

@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+// Use backend URL for local development, relative path for production (nginx proxy)
 const API_BASE_URL = import.meta.env.DEV
   ? 'http://localhost:8080/api'
   : '/api';
@@ -7,9 +8,12 @@ const API_BASE_URL = import.meta.env.DEV
 export const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
-  headers: { 'Content-Type': 'application/json' },
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
+// Analytics API calls
 export const analyticsAPI = {
   getLatest: (symbol = 'BTC-USD') =>
     api.get('/analytics/latest', { params: { symbol } }),
@@ -28,13 +32,9 @@ export const analyticsAPI = {
 
   getHealth: () =>
     api.get('/analytics/health'),
-
-  // Historical: auto-bucketed chart data for any start→end epoch range
-  getHistorical: (symbol, start, end) =>
-    api.get('/analytics/historical', { params: { symbol, start, end } }),
-
-  // Range summary: Open, High, Low, Close, volume, volatility for any range
-  getRangeSummary: (symbol, start, end) =>
-    api.get('/analytics/range-summary', { params: { symbol, start, end } }),
 };
 
+export const copilotAPI = {
+  chat: (message, symbol = 'BTC-USD') =>
+    api.post('/copilot/chat', { message, symbol }),
+};

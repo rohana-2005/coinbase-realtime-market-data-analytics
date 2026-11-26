@@ -97,7 +97,6 @@ const HistoricalChart = ({ coin, onBack }) => {
   // Drag-to-zoom state
   const [refAreaLeft,  setRefAreaLeft]  = useState('');
   const [refAreaRight, setRefAreaRight] = useState('');
-  const [isZooming,    setIsZooming]    = useState(false);
   const [zoomedData,   setZoomedData]   = useState(null);
   const isSelecting = useRef(false);
 

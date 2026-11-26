@@ -4,7 +4,7 @@ import React from 'react';
  * InfoTooltip — small info icon that reveals a one-liner explanation on hover.
  * Uses pure CSS (no JS state), so it's lightweight and flicker-free.
  */
-const InfoTooltip = ({ text, position = 'top' }) => (
+const InfoTooltip = ({ text }) => (
   <span className="tooltip-container ml-1.5 cursor-help">
     <svg
       viewBox="0 0 16 16"
